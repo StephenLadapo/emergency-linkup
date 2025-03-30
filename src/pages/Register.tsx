@@ -1,51 +1,38 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '@/components/AuthForm';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { registerUser, sendConfirmationEmail } from '@/services/api';
 
 const Register = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const sendConfirmationEmail = async (email: string, fullName: string) => {
-    // In a real implementation, this would call a backend service
-    console.log(`Sending confirmation email to ${email}`);
-    
-    // Simulate sending email
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // In production, use an email service API or backend function
-    return true;
-  };
-
   const handleRegister = async (email: string, password: string, fullName?: string, studentNumber?: string) => {
     setLoading(true);
     
     try {
-      // In a real app, this would connect to an authentication service
-      console.log('Registration with:', { email, fullName, studentNumber });
+      if (!fullName || !studentNumber) {
+        throw new Error('Full name and student number are required');
+      }
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Register user with database
+      await registerUser(email, password, fullName, studentNumber);
       
-      // Send confirmation email if name is provided
-      if (fullName) {
-        const emailSent = await sendConfirmationEmail(email, fullName);
-        if (emailSent) {
-          toast.success('Registration successful! Confirmation email has been sent.');
-        } else {
-          toast.warning('Registration successful, but confirmation email could not be sent.');
-        }
+      // Send confirmation email
+      const emailSent = await sendConfirmationEmail(email, fullName);
+      
+      if (emailSent) {
+        toast.success('Registration successful! Confirmation email has been sent.');
       } else {
-        toast.success('Registration successful! Please log in.');
+        toast.warning('Registration successful, but confirmation email could not be sent.');
       }
       
       navigate('/login');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
-      toast.error('Registration failed. Please try again.');
+      toast.error(error.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }

@@ -1,9 +1,9 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '@/components/AuthForm';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { loginUser } from '@/services/api';
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -13,24 +13,22 @@ const Login = () => {
     setLoading(true);
     
     try {
-      // In a real app, this would connect to an authentication service
-      console.log('Login attempt with:', { email });
+      // Login user with database
+      const response = await loginUser(email, password);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock successful login
+      // Store user data in localStorage
       localStorage.setItem('user', JSON.stringify({
-        name: 'Test Student',
-        email,
+        name: response.user.fullName,
+        email: response.user.email,
+        studentNumber: response.user.studentNumber,
         photoUrl: '',
       }));
       
       toast.success('Login successful!');
       navigate('/');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      toast.error('Login failed. Please check your credentials.');
+      toast.error(error.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
