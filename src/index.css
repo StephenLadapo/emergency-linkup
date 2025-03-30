@@ -14,10 +14,12 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 0 84.2% 60.2%;  /* Red for emergency */
+    /* Gold/amber from UL logo */
+    --primary: 43 96% 56%;
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 217.2 91.2% 59.8%; /* Blue for medical */
+    /* Blue from UL logo */
+    --secondary: 217.2 91.2% 59.8%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
@@ -26,6 +28,7 @@
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
+    /* Red for emergency */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
@@ -55,10 +58,12 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 0 84.2% 60.2%;  /* Red for emergency */
+    /* Gold/amber from UL logo */
+    --primary: 43 96% 56%;
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 217.2 91.2% 59.8%; /* Blue for medical */
+    /* Blue from UL logo */
+    --secondary: 217.2 91.2% 59.8%;
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217.2 32.6% 17.5%;
@@ -120,9 +125,28 @@
 }
 
 .glass-card {
-  @apply bg-white/80 dark:bg-black/50 backdrop-blur-md border border-white/20 dark:border-white/10;
+  @apply bg-white/80 dark:bg-black/50 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-lg;
 }
 
 .text-gradient {
-  @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-amber-500 to-secondary bg-clip-text text-transparent;
+}
+
+/* UL themed styles */
+.ul-pattern {
+  background-color: #f8f9fa;
+  background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.card-hover {
+  @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+}
+
+.ul-gradient {
+  @apply bg-gradient-to-br from-amber-500/90 to-blue-500/80;
+}
+
+.ul-card {
+  @apply border border-amber-200 bg-gradient-to-br from-amber-50 to-blue-50 dark:from-amber-900/20 dark:to-blue-900/20;
 }
