@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Shield, FirstAid, BadgeAlert } from "lucide-react";
+import { Shield, Stethoscope, BadgeAlert } from "lucide-react";
 import { toast } from "sonner";
 
 const COUNTDOWN_TIME = 5; // seconds
@@ -119,7 +119,7 @@ const EmergencyButton = () => {
                 <div className="flex items-center space-x-2 border rounded-md p-3">
                   <RadioGroupItem value="medical" id="medical" />
                   <Label htmlFor="medical" className="flex items-center cursor-pointer">
-                    <FirstAid className="h-5 w-5 mr-2 text-secondary" /> 
+                    <Stethoscope className="h-5 w-5 mr-2 text-secondary" /> 
                     Medical Emergency
                   </Label>
                 </div>
