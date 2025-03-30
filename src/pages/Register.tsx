@@ -9,18 +9,39 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleRegister = async (email: string, password: string, fullName?: string, studentId?: string) => {
+  const sendConfirmationEmail = async (email: string, fullName: string) => {
+    // In a real implementation, this would call a backend service
+    console.log(`Sending confirmation email to ${email}`);
+    
+    // Simulate sending email
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // In production, use an email service API or backend function
+    return true;
+  };
+
+  const handleRegister = async (email: string, password: string, fullName?: string, studentNumber?: string) => {
     setLoading(true);
     
     try {
       // In a real app, this would connect to an authentication service
-      console.log('Registration with:', { email, fullName, studentId });
+      console.log('Registration with:', { email, fullName, studentNumber });
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock successful registration
-      toast.success('Registration successful! Please log in.');
+      // Send confirmation email if name is provided
+      if (fullName) {
+        const emailSent = await sendConfirmationEmail(email, fullName);
+        if (emailSent) {
+          toast.success('Registration successful! Confirmation email has been sent.');
+        } else {
+          toast.warning('Registration successful, but confirmation email could not be sent.');
+        }
+      } else {
+        toast.success('Registration successful! Please log in.');
+      }
+      
       navigate('/login');
     } catch (error) {
       console.error('Registration error:', error);

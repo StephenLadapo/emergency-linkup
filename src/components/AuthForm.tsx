@@ -8,14 +8,14 @@ import { toast } from "sonner";
 
 interface AuthFormProps {
   mode: 'login' | 'register';
-  onSubmit: (email: string, password: string, fullName?: string, studentId?: string) => void;
+  onSubmit: (email: string, password: string, fullName?: string, studentNumber?: string) => void;
 }
 
 const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [studentId, setStudentId] = useState('');
+  const [studentNumber, setStudentNumber] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -27,7 +27,7 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
     
     setLoading(true);
     try {
-      onSubmit(email, password, mode === 'register' ? fullName : undefined, mode === 'register' ? studentId : undefined);
+      onSubmit(email, password, mode === 'register' ? fullName : undefined, mode === 'register' ? studentNumber : undefined);
     } catch (error) {
       console.error('Auth error:', error);
       toast.error('Authentication failed. Please try again.');
@@ -61,12 +61,12 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="studentId">Student ID</Label>
+                <Label htmlFor="studentNumber">Student Number</Label>
                 <Input 
-                  id="studentId"
+                  id="studentNumber"
                   type="text" 
-                  value={studentId}
-                  onChange={(e) => setStudentId(e.target.value)}
+                  value={studentNumber}
+                  onChange={(e) => setStudentNumber(e.target.value)}
                   required
                 />
               </div>

@@ -27,19 +27,21 @@ const ChatBot = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Mock first aid responses - in a real app, this would use a proper AI service
+  // Enhanced first aid responses with more detailed instructions
   const firstAidResponses: Record<string, string> = {
-    'bleeding': "Apply direct pressure to the wound using a clean cloth or bandage. Keep the pressure on until help arrives. If the wound is severe, lie down and elevate the injured area above heart level if possible.",
-    'burn': "Run cool (not cold) water over the burn for about 10 minutes. Don't use ice. Cover the burn with a clean, dry bandage. Don't apply ointments unless directed by medical professionals.",
-    'choking': "If someone is choking and cannot speak, breathe, or cough, stand behind them and give 5 back blows between their shoulder blades with the heel of your hand. If that doesn't work, give 5 abdominal thrusts (Heimlich maneuver).",
-    'heart attack': "Have the person sit down, rest, and try to keep calm. Loosen any tight clothing. If the person takes medication for a heart condition, such as nitroglycerin, have them take it. Call for emergency medical help immediately.",
-    'fracture': "Don't move the injured area. Keep it stable and supported. Apply ice wrapped in a cloth to reduce swelling. Wait for medical help.",
-    'seizure': "Move furniture or other objects away from the person. Gently roll them onto their side if possible. Don't restrain them or put anything in their mouth. Time the seizure if possible.",
-    'snake bite': "Keep the bite victim calm and still. The affected limb should be kept below heart level. Remove any jewelry or tight clothing near the bite. Do not apply a tourniquet or try to suck out the venom.",
-    'unconscious': "Check their breathing. If they're not breathing, begin CPR if you're trained. If they are breathing, place them in the recovery position (on their side). Call emergency services immediately.",
-    'shock': "Have the person lie down. Keep them warm with a blanket. Elevate their feet about 12 inches unless you suspect head, neck, back injuries or broken bones. Do not give them anything to eat or drink.",
-    'asthma': "Help the person sit in an upright position. Assist them in using their rescue inhaler if available. Encourage slow, deep breathing. If symptoms worsen or don't improve quickly, seek emergency help.",
-    'allergic reaction': "If the person has an epinephrine auto-injector (like an EpiPen), help them use it according to instructions. Even if symptoms improve, medical attention is still needed. Help them sit or lie in a comfortable position.",
+    'bleeding': "For bleeding: 1) Apply firm, direct pressure with a clean cloth or bandage. 2) If blood soaks through, add another layer without removing the first. 3) Keep pressing for at least 15 minutes. 4) Elevate the injured area above heart level if possible. 5) For severe bleeding, lie the person down to prevent shock and call emergency services immediately.",
+    'burn': "For burns: 1) Run cool (not cold) water over the burn for 10-15 minutes. 2) Never use ice, butter, or ointments on fresh burns. 3) Don't break blisters. 4) Cover with a clean, non-stick bandage. 5) For chemical burns, rinse with water for 20 minutes. 6) Seek medical help for burns larger than 3 inches, or on face, hands, feet, genitals, or major joints.",
+    'choking': "For choking: 1) Ask 'Are you choking?' If they can't speak, breathe or cough, act immediately. 2) Stand behind them and give 5 back blows between their shoulder blades with the heel of your hand. 3) If unsuccessful, perform 5 abdominal thrusts (Heimlich maneuver): place your fist above their navel and pull inward and upward sharply. 4) Alternate 5 back blows and 5 abdominal thrusts until the object is expelled or help arrives.",
+    'heart attack': "For heart attack: 1) Have the person sit or lie down in a comfortable position. 2) Loosen any tight clothing. 3) Give aspirin if available and not allergic. 4) If the person has nitroglycerin, help them take it. 5) Begin CPR if they become unconscious and aren't breathing normally. 6) Call emergency services immediately. Warning signs include: chest pain/pressure, pain radiating to arm/jaw/back, shortness of breath, cold sweat, nausea.",
+    'fracture': "For fractures: 1) Don't move the injured area unless absolutely necessary. 2) Stabilize the injury in the position found using rolled towels, pillows or clothing. 3) Apply ice wrapped in cloth for 20 minutes to reduce swelling and pain. 4) For open fractures (bone visible), cover the wound with a clean cloth but don't push bone back in. 5) Monitor for shock symptoms. 6) Seek immediate medical help - proper alignment is crucial for healing.",
+    'seizure': "For seizures: 1) Ease the person to the floor and clear the area of anything hazardous. 2) Place something soft under their head. 3) Turn them gently onto their side to prevent choking. 4) NEVER put anything in their mouth or try to restrain them. 5) Time the seizure - call emergency services if it lasts more than 5 minutes or they don't regain consciousness. 6) Stay with them as they regain awareness and reassure them.",
+    'snake bite': "For snake bites: 1) Move the person away from the snake's striking distance. 2) Keep the bitten area below heart level if possible. 3) Remove any rings or tight items as swelling may occur. 4) Clean the wound gently, but don't flush with water. 5) Cover with a clean, dry bandage. 6) Keep the person calm and still to slow venom spread. 7) DO NOT: cut the wound, apply a tourniquet, suck out venom, apply ice or immerse in water. 8) Get medical help immediately.",
+    'unconscious': "For unconsciousness: 1) Check responsiveness by tapping shoulders and asking loudly if they're okay. 2) If no response, check for breathing (look, listen, feel). 3) If breathing, place in recovery position: roll onto side, bottom arm extended, top knee bent, top arm supporting head. 4) If not breathing normally, begin CPR immediately if trained. 5) Call emergency services. 6) Monitor breathing and pulse until help arrives. 7) Note time when unconsciousness began.",
+    'shock': "For shock: 1) Have the person lie flat on their back with feet elevated about 12 inches (unless head, neck, back injuries or broken bones in legs). 2) Keep them warm with blankets or coats. 3) Loosen tight clothing. 4) Don't give anything to eat or drink. 5) If they vomit, turn their head to the side. 6) Seek immediate medical attention. Signs of shock: rapid breathing, weak pulse, pale clammy skin, dizziness, confusion.",
+    'asthma': "For asthma attack: 1) Help the person sit upright in a comfortable position - leaning slightly forward often helps breathing. 2) Assist with their prescribed rescue inhaler: shake it, remove cap, have them exhale fully, place mouthpiece in mouth, inhale deeply while pressing canister, hold breath 10 seconds. 3) Encourage slow, deep breathing. 4) If no improvement after 2 puffs, they may repeat after 20 minutes. 5) Call emergency services if symptoms worsen or don't improve quickly.",
+    'allergic reaction': "For severe allergic reaction: 1) Ask if they have an epinephrine auto-injector (EpiPen). 2) Help them use it: remove safety cap, hold against outer thigh mid-way between hip and knee, press firmly until you hear a click, hold for 10 seconds. 3) Call emergency services immediately even if symptoms improve - effects of epinephrine are temporary. 4) Have them lie on their back with legs elevated unless they have breathing difficulties. 5) A second dose may be given after 5-15 minutes if symptoms persist.",
+    'drowning': "For drowning: 1) Ensure your safety first - don't become a victim yourself. 2) Call for emergency services. 3) If safely possible, remove person from water. 4) Check for breathing. If not breathing, begin CPR immediately. 5) If breathing, place in recovery position (on their side) to prevent choking if they vomit. 6) Remove wet clothes and keep them warm. 7) ALL drowning victims need medical evaluation, even if they seem recovered.",
+    'heatstroke': "For heatstroke: 1) Move to a cool, shaded area immediately. 2) Call emergency services. 3) Remove excess clothing. 4) Cool the body quickly: place ice packs on neck, armpits, groin; spray with cool water; fan continuously. 5) If conscious and alert, give small sips of cool water (not cold). 6) Monitor body temperature if possible. 7) Signs of heatstroke: high body temperature, altered mental state, hot/dry skin, rapid strong pulse."
   };
 
   // Scroll to bottom of messages
@@ -52,7 +54,7 @@ const ChatBot = () => {
     setNewMessage(e.target.value);
   };
 
-  // Handle sending a new message
+  // Enhanced message processing system
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
     
@@ -69,15 +71,12 @@ const ChatBot = () => {
     
     try {
       // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 700));
       
-      // Generate response based on user message
-      let botResponse = "I'm here to help in emergencies. Can you tell me what's happening?";
-      
-      // Check for keywords in the user message
       const lowercaseMsg = newMessage.toLowerCase();
+      let botResponse = "I'm here to help in emergencies. Can you provide more details about your situation?";
       
-      // Check for first aid related keywords
+      // Check for first aid related keywords with improved matching
       const foundFirstAidTopic = Object.keys(firstAidResponses).find(topic => 
         lowercaseMsg.includes(topic)
       );
@@ -85,14 +84,38 @@ const ChatBot = () => {
       if (foundFirstAidTopic) {
         botResponse = firstAidResponses[foundFirstAidTopic];
       } 
-      // Check for emergency keywords
+      // Improved emergency keyword recognition
       else if (
         lowercaseMsg.includes('help') || 
         lowercaseMsg.includes('emergency') ||
         lowercaseMsg.includes('hurt') ||
-        lowercaseMsg.includes('pain')
+        lowercaseMsg.includes('pain') ||
+        lowercaseMsg.includes('injured') ||
+        lowercaseMsg.includes('accident') ||
+        lowercaseMsg.includes('blood') ||
+        lowercaseMsg.includes('fell') ||
+        lowercaseMsg.includes('fall') ||
+        lowercaseMsg.includes('wound')
       ) {
-        botResponse = "I understand you need help. Can you tell me more about what's happening? I can provide first aid guidance while you wait for emergency services.";
+        botResponse = "I understand you need urgent help. Please tell me:\n\n1. What type of injury/emergency?\n2. Is the person conscious and breathing?\n3. Is there severe bleeding?\n\nI can provide first aid guidance while you call emergency services at 10111 (national emergency) or campus security.";
+      }
+      // Handle greetings and common questions
+      else if (
+        lowercaseMsg.includes('hi') || 
+        lowercaseMsg.includes('hello') || 
+        lowercaseMsg.includes('hey')
+      ) {
+        botResponse = "Hello! I'm the University of Limpopo Emergency Assistant. I can provide first aid guidance and emergency information. How can I help you today?";
+      }
+      else if (lowercaseMsg.includes('thank')) {
+        botResponse = "You're welcome! Remember, for real emergencies, always call professional help while administering first aid. Is there anything else I can assist with?";
+      }
+      else if (
+        lowercaseMsg.includes('campus security') || 
+        lowercaseMsg.includes('security number') ||
+        lowercaseMsg.includes('emergency number')
+      ) {
+        botResponse = "University of Limpopo Campus Security can be reached at 015-268-XXXX (replace with actual number). For national emergencies, call 10111. Save these numbers in your phone for quick access.";
       }
       
       const botMessage: Message = {
@@ -119,10 +142,10 @@ const ChatBot = () => {
   };
 
   return (
-    <Card className="flex flex-col h-full">
-      <CardHeader className="pb-2">
+    <Card className="flex flex-col h-full shadow-lg border-amber-200">
+      <CardHeader className="pb-2 bg-gradient-to-r from-amber-50 to-blue-50 dark:from-amber-900/20 dark:to-blue-900/20">
         <CardTitle className="flex items-center gap-2">
-          <Bot className="h-5 w-5 text-secondary" />
+          <Bot className="h-5 w-5 text-amber-500" />
           Emergency Assistant
         </CardTitle>
         <CardDescription>
@@ -141,8 +164,8 @@ const ChatBot = () => {
                   className={`
                     max-w-[80%] rounded-lg px-4 py-2 
                     ${message.sender === 'user' 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'bg-secondary/20 text-foreground'
+                      ? 'bg-amber-500 text-white' 
+                      : 'bg-blue-100 text-foreground dark:bg-blue-900/30'
                     }
                   `}
                 >
@@ -156,7 +179,7 @@ const ChatBot = () => {
                       {message.sender === 'user' ? 'You' : 'Assistant'}
                     </span>
                   </div>
-                  <p>{message.text}</p>
+                  <p className="whitespace-pre-line">{message.text}</p>
                 </div>
               </div>
             ))}
@@ -178,6 +201,7 @@ const ChatBot = () => {
             size="icon" 
             onClick={handleSendMessage} 
             disabled={isLoading || !newMessage.trim()}
+            className="bg-amber-500 hover:bg-amber-600"
           >
             <Send className="h-4 w-4" />
           </Button>
