@@ -4,13 +4,14 @@ import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Menu, LogOut, Bell, AlertCircle, User as UserIcon } from 'lucide-react';
+import { Menu, LogOut, Bell, User as UserIcon } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import Logo from './Logo';
 
 interface HeaderProps {
   user?: {
@@ -69,10 +70,8 @@ const Header = ({ user, onLogout }: HeaderProps) => {
             </SheetContent>
           </Sheet>
           
-          <Link to="/" className="flex items-center space-x-2">
-            <AlertCircle className="h-6 w-6 text-primary" />
-            <span className="font-bold text-lg">EmergencyLinkUp</span>
-            <span className="text-xs text-muted-foreground">UL</span>
+          <Link to="/" className="flex items-center">
+            <Logo />
           </Link>
         </div>
         

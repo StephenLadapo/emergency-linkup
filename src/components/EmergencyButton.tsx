@@ -89,12 +89,12 @@ const EmergencyButton = () => {
           <Button 
             variant="destructive" 
             size="lg"
-            className="rounded-full h-16 w-16 animate-pulse-slow shadow-lg"
+            className="rounded-full h-20 w-20 text-xl font-bold animate-pulse-slow shadow-lg shadow-primary/20"
           >
             SOS
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md rounded-xl">
           <DialogHeader>
             <DialogTitle className="text-center text-xl font-bold text-destructive">
               Emergency Assistance
@@ -108,26 +108,26 @@ const EmergencyButton = () => {
               </div>
               
               <RadioGroup value={emergencyType || ""} onValueChange={setEmergencyType} className="grid grid-cols-1 gap-4">
-                <div className="flex items-center space-x-2 border rounded-md p-3">
+                <div className="flex items-center space-x-2 border rounded-md p-4 hover:bg-muted/50 transition-colors">
                   <RadioGroupItem value="security" id="security" />
                   <Label htmlFor="security" className="flex items-center cursor-pointer">
-                    <Shield className="h-5 w-5 mr-2 text-destructive" /> 
+                    <Shield className="h-5 w-5 mr-3 text-destructive" /> 
                     Security Emergency
                   </Label>
                 </div>
                 
-                <div className="flex items-center space-x-2 border rounded-md p-3">
+                <div className="flex items-center space-x-2 border rounded-md p-4 hover:bg-muted/50 transition-colors">
                   <RadioGroupItem value="medical" id="medical" />
                   <Label htmlFor="medical" className="flex items-center cursor-pointer">
-                    <Stethoscope className="h-5 w-5 mr-2 text-secondary" /> 
+                    <Stethoscope className="h-5 w-5 mr-3 text-secondary" /> 
                     Medical Emergency
                   </Label>
                 </div>
                 
-                <div className="flex items-center space-x-2 border rounded-md p-3">
+                <div className="flex items-center space-x-2 border rounded-md p-4 hover:bg-muted/50 transition-colors">
                   <RadioGroupItem value="other" id="other" />
                   <Label htmlFor="other" className="flex items-center cursor-pointer">
-                    <BadgeAlert className="h-5 w-5 mr-2 text-amber-500" /> 
+                    <BadgeAlert className="h-5 w-5 mr-3 text-amber-500" /> 
                     Other Emergency
                   </Label>
                 </div>
@@ -135,19 +135,19 @@ const EmergencyButton = () => {
               
               <Button 
                 variant="destructive" 
-                className="w-full" 
+                className="w-full py-6 text-lg font-bold" 
                 onClick={startCountdown}
               >
                 Request Help Now
               </Button>
             </div>
           ) : (
-            <div className="space-y-6 text-center">
-              <div className="text-2xl font-bold">{countdown}</div>
-              <div className="text-muted-foreground">
+            <div className="space-y-6 text-center p-4">
+              <div className="text-5xl font-bold text-destructive mb-2">{countdown}</div>
+              <div className="text-lg">
                 Help will be requested in {countdown} seconds
               </div>
-              <div className="text-sm">
+              <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
                 Your current location will be shared with emergency responders
               </div>
               <Button variant="outline" onClick={cancelRequest} className="w-full">
