@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '@/components/AuthForm';
@@ -12,10 +11,12 @@ const Login = () => {
 
   const handleLogin = async (email: string, password: string) => {
     setLoading(true);
+    console.log('Login attempt with:', { email });
     
     try {
       // Login user with database
       const response = await loginUser(email, password);
+      console.log('Login response:', response);
       
       // Store user data in localStorage
       localStorage.setItem('user', JSON.stringify({
@@ -29,7 +30,17 @@ const Login = () => {
       navigate('/');
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.message || 'Login failed. Please check your credentials.');
+      
+      // More detailed error handling
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        toast.error(error.response.data?.message || 'Server error. Please try again.');
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        toast.error('No response from server. Please check your connection or if the server is running.');
+      } else {
+        toast.error(error.message || 'Login failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }
@@ -56,7 +67,7 @@ const Login = () => {
       
       <div className="z-10 w-full max-w-md">
         <div className="glass-card p-6 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 shadow-lg">
-          <AuthForm mode="login" onSubmit={handleLogin} />
+          <AuthForm mode="login" onSubmit={handleLogin} loading={loading} />
           
           <div className="mt-6 text-center text-sm text-white">
             Don't have an account?{' '}

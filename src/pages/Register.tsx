@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '@/components/AuthForm';
@@ -12,6 +11,7 @@ const Register = () => {
 
   const handleRegister = async (email: string, password: string, fullName?: string, studentNumber?: string) => {
     setLoading(true);
+    console.log('Registration attempt with:', { email, fullName, studentNumber });
     
     try {
       if (!fullName || !studentNumber) {
@@ -19,12 +19,14 @@ const Register = () => {
       }
       
       // Register user with database
-      await registerUser(email, password, fullName, studentNumber);
+      const registerResponse = await registerUser(email, password, fullName, studentNumber);
+      console.log('Registration response:', registerResponse);
       
       // Send confirmation email
-      const emailSent = await sendConfirmationEmail(email, fullName);
+      const emailResponse = await sendConfirmationEmail(email, fullName);
+      console.log('Email confirmation response:', emailResponse);
       
-      if (emailSent) {
+      if (emailResponse) {
         toast.success('Registration successful! Confirmation email has been sent.');
       } else {
         toast.warning('Registration successful, but confirmation email could not be sent.');
@@ -33,7 +35,17 @@ const Register = () => {
       navigate('/login');
     } catch (error: any) {
       console.error('Registration error:', error);
-      toast.error(error.message || 'Registration failed. Please try again.');
+      
+      // More detailed error handling
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        toast.error(error.response.data?.message || 'Server error. Please try again.');
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        toast.error('No response from server. Please check your connection or if the server is running.');
+      } else {
+        toast.error(error.message || 'Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -60,7 +72,7 @@ const Register = () => {
       
       <div className="z-10 w-full max-w-md">
         <div className="glass-card p-6 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 shadow-lg">
-          <AuthForm mode="register" onSubmit={handleRegister} />
+          <AuthForm mode="register" onSubmit={handleRegister} loading={loading} />
           
           <div className="mt-6 text-center text-sm text-white">
             Already have an account?{' '}
