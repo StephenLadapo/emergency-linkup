@@ -43,7 +43,7 @@ const Register = () => {
     <div 
       className="min-h-screen flex flex-col items-center justify-center py-12"
       style={{ 
-        backgroundImage: `url('/lovable-uploads/1720072201762-campus.jpeg')`,
+        backgroundImage: `url('/lovable-uploads/967c8163-5646-46b6-86ff-822dce06a08a.png')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
