@@ -37,14 +37,15 @@ const Login = () => {
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center justify-center py-12 bg-cover bg-center"
+      className="min-h-screen flex flex-col items-center justify-center py-12"
       style={{ 
-        backgroundImage: "url('/lovable-uploads/1720072201762-campus.jpeg')", 
+        backgroundImage: `url('/lovable-uploads/1720072201762-campus.jpeg')`,
         backgroundSize: 'cover',
-        backgroundPosition: 'center'
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
       }}
     >
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+      <div className="absolute inset-0 bg-black/60"></div>
       
       <div className="z-10 flex flex-col items-center space-y-2 text-center mb-8">
         <h1 className="text-3xl font-bold text-white">Welcome Back</h1>
