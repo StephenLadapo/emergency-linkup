@@ -9,59 +9,37 @@ import { toast } from "sonner";
 interface AuthFormProps {
   mode: 'login' | 'register';
   onSubmit: (email: string, password: string, fullName?: string, studentNumber?: string) => void;
-  loading?: boolean;
 }
 
-const AuthForm = ({ mode, onSubmit, loading = false }: AuthFormProps) => {
+const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [studentNumber, setStudentNumber] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Email validation
-    if (!email || !email.includes('@')) {
-      toast.error('Please enter a valid email address');
+    if (!email.endsWith('@keyaka.ul.ac.za')) {
+      toast.error('Please use your university email (@keyaka.ul.ac.za)');
       return;
     }
     
-    // For a real app, you should implement better validation
-    if (mode === 'register') {
-      if (!email.endsWith('@keyaka.ul.ac.za')) {
-        toast.error('Please use your university email (@keyaka.ul.ac.za)');
-        return;
-      }
-      
-      if (!fullName.trim()) {
-        toast.error('Please enter your full name');
-        return;
-      }
-      
-      if (!studentNumber.trim()) {
-        toast.error('Please enter your student number');
-        return;
-      }
-      
-      if (password.length < 6) {
-        toast.error('Password should be at least 6 characters');
-        return;
-      }
-    }
-    
+    setLoading(true);
     try {
       onSubmit(email, password, mode === 'register' ? fullName : undefined, mode === 'register' ? studentNumber : undefined);
     } catch (error) {
       console.error('Auth error:', error);
       toast.error('Authentication failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-white/90 backdrop-blur-sm border-white/20 shadow-lg">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl">{mode === 'login' ? 'Login' : 'Register'}</CardTitle>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>{mode === 'login' ? 'Login' : 'Register'}</CardTitle>
         <CardDescription>
           {mode === 'login' 
             ? 'Enter your credentials to access the emergency system.' 
@@ -80,7 +58,6 @@ const AuthForm = ({ mode, onSubmit, loading = false }: AuthFormProps) => {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
-                  className="bg-white/80"
                 />
               </div>
               <div className="space-y-2">
@@ -91,7 +68,6 @@ const AuthForm = ({ mode, onSubmit, loading = false }: AuthFormProps) => {
                   value={studentNumber}
                   onChange={(e) => setStudentNumber(e.target.value)}
                   required
-                  className="bg-white/80"
                 />
               </div>
             </>
@@ -106,7 +82,6 @@ const AuthForm = ({ mode, onSubmit, loading = false }: AuthFormProps) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-white/80"
             />
           </div>
           
@@ -118,15 +93,13 @@ const AuthForm = ({ mode, onSubmit, loading = false }: AuthFormProps) => {
               value={password} 
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-white/80"
-              minLength={6}
             />
           </div>
         </form>
       </CardContent>
       <CardFooter>
         <Button 
-          className="w-full bg-amber-500 hover:bg-amber-600 text-white" 
+          className="w-full" 
           onClick={handleSubmit} 
           disabled={loading}
         >
