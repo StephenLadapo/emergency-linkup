@@ -42,7 +42,11 @@ const Register = () => {
   return (
     <div 
       className="min-h-screen flex flex-col items-center justify-center py-12 bg-cover bg-center"
-      style={{ backgroundImage: "url('/lovable-uploads/86b185de-b530-40c7-a4cc-e02de30ff0ea.png')" }}
+      style={{ 
+        backgroundImage: "url('/lovable-uploads/1720072201762-campus.jpeg')", 
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}
     >
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
       
@@ -54,7 +58,7 @@ const Register = () => {
       </div>
       
       <div className="z-10 w-full max-w-md">
-        <div className="glass-card p-6 rounded-lg">
+        <div className="glass-card p-6 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 shadow-lg">
           <AuthForm mode="register" onSubmit={handleRegister} />
           
           <div className="mt-6 text-center text-sm text-white">
