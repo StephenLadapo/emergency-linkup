@@ -37,9 +37,9 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-white/90 backdrop-blur-sm border-white/20 shadow-lg">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl">{mode === 'login' ? 'Login' : 'Register'}</CardTitle>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>{mode === 'login' ? 'Login' : 'Register'}</CardTitle>
         <CardDescription>
           {mode === 'login' 
             ? 'Enter your credentials to access the emergency system.' 
@@ -58,7 +58,6 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
-                  className="bg-white/80"
                 />
               </div>
               <div className="space-y-2">
@@ -69,7 +68,6 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
                   value={studentNumber}
                   onChange={(e) => setStudentNumber(e.target.value)}
                   required
-                  className="bg-white/80"
                 />
               </div>
             </>
@@ -84,7 +82,6 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-white/80"
             />
           </div>
           
@@ -96,14 +93,13 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
               value={password} 
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-white/80"
             />
           </div>
         </form>
       </CardContent>
       <CardFooter>
         <Button 
-          className="w-full bg-amber-500 hover:bg-amber-600 text-white" 
+          className="w-full" 
           onClick={handleSubmit} 
           disabled={loading}
         >
