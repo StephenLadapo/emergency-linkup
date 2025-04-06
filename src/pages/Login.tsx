@@ -37,28 +37,31 @@ const Login = () => {
   };
 
   return (
-    <div className="container flex flex-col items-center justify-center min-h-screen py-12">
-      <div className="flex flex-col items-center space-y-2 text-center mb-8">
-        <h1 className="text-3xl font-bold">Welcome Back</h1>
-        <p className="text-muted-foreground">
-          Sign in to access the University of Limpopo Emergency System
-        </p>
-      </div>
-      
-      <div className="w-full max-w-md">
-        <AuthForm mode="login" onSubmit={handleLogin} />
-        
-        <div className="mt-6 text-center text-sm">
-          Don't have an account?{' '}
-          <Link to="/register" className="underline text-primary">
-            Register here
-          </Link>
+    <div className="bg-ul-campus min-h-screen bg-cover bg-center bg-no-repeat flex flex-col items-center justify-center py-12">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+      <div className="container flex flex-col items-center justify-center z-10">
+        <div className="flex flex-col items-center space-y-2 text-center mb-8">
+          <h1 className="text-3xl font-bold text-white">Welcome Back</h1>
+          <p className="text-white/80">
+            Sign in to access the University of Limpopo Emergency System
+          </p>
         </div>
         
-        <div className="mt-8 text-center">
-          <Button variant="outline" asChild>
-            <Link to="/">Back to Home</Link>
-          </Button>
+        <div className="w-full max-w-md">
+          <AuthForm mode="login" onSubmit={handleLogin} />
+          
+          <div className="mt-6 text-center text-sm text-white">
+            Don't have an account?{' '}
+            <Link to="/register" className="underline text-amber-400 hover:text-amber-300">
+              Register here
+            </Link>
+          </div>
+          
+          <div className="mt-8 text-center">
+            <Button variant="outline" asChild className="bg-white/20 hover:bg-white/30 text-white border-white/20">
+              <Link to="/">Back to Home</Link>
+            </Button>
+          </div>
         </div>
       </div>
     </div>
