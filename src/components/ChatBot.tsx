@@ -18,7 +18,7 @@ const ChatBot = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Hello! I'm your emergency assistant. How can I help you today? Ask me about first aid or emergency procedures.",
+      text: "Hello! I'm your emergency assistant. How can I help you today?",
       sender: 'bot',
       timestamp: new Date()
     }
@@ -54,7 +54,7 @@ const ChatBot = () => {
     setNewMessage(e.target.value);
   };
 
-  // Enhanced message processing system with improved matching
+  // Enhanced message processing system
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
     
@@ -84,7 +84,7 @@ const ChatBot = () => {
       if (foundFirstAidTopic) {
         botResponse = firstAidResponses[foundFirstAidTopic];
       } 
-      // Enhanced emergency keyword recognition with more patterns
+      // Improved emergency keyword recognition
       else if (
         lowercaseMsg.includes('help') || 
         lowercaseMsg.includes('emergency') ||
@@ -95,22 +95,15 @@ const ChatBot = () => {
         lowercaseMsg.includes('blood') ||
         lowercaseMsg.includes('fell') ||
         lowercaseMsg.includes('fall') ||
-        lowercaseMsg.includes('wound') ||
-        lowercaseMsg.includes('cut') ||
-        lowercaseMsg.includes('injury') ||
-        lowercaseMsg.includes('first aid') ||
-        lowercaseMsg.includes('medical')
+        lowercaseMsg.includes('wound')
       ) {
         botResponse = "I understand you need urgent help. Please tell me:\n\n1. What type of injury/emergency?\n2. Is the person conscious and breathing?\n3. Is there severe bleeding?\n\nI can provide first aid guidance while you call emergency services at 10111 (national emergency) or campus security.";
       }
-      // Handle greetings and common questions with broader pattern matching
+      // Handle greetings and common questions
       else if (
         lowercaseMsg.includes('hi') || 
         lowercaseMsg.includes('hello') || 
-        lowercaseMsg.includes('hey') ||
-        lowercaseMsg.includes('morning') ||
-        lowercaseMsg.includes('evening') ||
-        lowercaseMsg.includes('afternoon')
+        lowercaseMsg.includes('hey')
       ) {
         botResponse = "Hello! I'm the University of Limpopo Emergency Assistant. I can provide first aid guidance and emergency information. How can I help you today?";
       }
@@ -120,19 +113,9 @@ const ChatBot = () => {
       else if (
         lowercaseMsg.includes('campus security') || 
         lowercaseMsg.includes('security number') ||
-        lowercaseMsg.includes('emergency number') ||
-        lowercaseMsg.includes('call') ||
-        lowercaseMsg.includes('contact') ||
-        lowercaseMsg.includes('help line')
+        lowercaseMsg.includes('emergency number')
       ) {
         botResponse = "University of Limpopo Campus Security can be reached at 015-268-XXXX (replace with actual number). For national emergencies, call 10111. Save these numbers in your phone for quick access.";
-      }
-      else if (
-        lowercaseMsg.includes('what can you do') ||
-        lowercaseMsg.includes('how do you help') ||
-        lowercaseMsg.includes('your purpose')
-      ) {
-        botResponse = "I can provide first aid guidance for emergencies like bleeding, burns, fractures, choking, and more. I can also give you campus emergency contact information and help you understand what to do in various emergency situations while waiting for professional help.";
       }
       
       const botMessage: Message = {
@@ -207,7 +190,7 @@ const ChatBot = () => {
       <CardFooter className="pt-2 border-t">
         <div className="flex w-full items-center space-x-2">
           <Input
-            placeholder="Ask about first aid or emergencies..."
+            placeholder="Ask for first aid help..."
             value={newMessage}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
