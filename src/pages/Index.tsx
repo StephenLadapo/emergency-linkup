@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Dashboard from '@/components/Dashboard';
 import { Button } from '@/components/ui/button';
-import { Shield, BookOpen, Stethoscope, HandHelping, Sparkles } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Shield, BookOpen, Stethoscope, HandHelping, Sparkles, School, GraduationCap, Phone, Mail, Facebook, Instagram, Linkedin, Users, CalendarDays, HeartPulse } from 'lucide-react';
 
 const Index = () => {
   const [user, setUser] = useState<{name: string; email: string; photoUrl?: string} | null>(null);
@@ -95,13 +96,129 @@ const Index = () => {
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
               <Button size="lg" className="px-8 py-6 text-lg rounded-full shadow-lg hover:shadow-xl bg-amber-500 hover:bg-amber-600" onClick={() => navigate('/register')}>
                 Register with University Email
               </Button>
               <Button size="lg" variant="outline" className="px-8 py-6 text-lg rounded-full shadow hover:shadow-md border-amber-500 text-amber-700 hover:bg-amber-50" onClick={() => navigate('/login')}>
                 Login to Your Account
               </Button>
+            </div>
+            
+            {/* University Features Section */}
+            <div className="mb-16">
+              <h2 className="text-3xl font-bold mb-8 text-center">Campus Safety Features</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-white/80 dark:bg-slate-800/80 rounded-lg p-6 shadow-md text-center">
+                  <div className="mb-4 bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto">
+                    <GraduationCap className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">Student Support</h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">24/7 emergency assistance for all students on campus.</p>
+                </div>
+                
+                <div className="bg-white/80 dark:bg-slate-800/80 rounded-lg p-6 shadow-md text-center">
+                  <div className="mb-4 bg-green-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto">
+                    <Users className="h-6 w-6 text-green-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">Campus Security</h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">Trained security personnel available throughout campus.</p>
+                </div>
+                
+                <div className="bg-white/80 dark:bg-slate-800/80 rounded-lg p-6 shadow-md text-center">
+                  <div className="mb-4 bg-purple-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto">
+                    <HeartPulse className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">Health Services</h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">On-campus clinic with medical professionals.</p>
+                </div>
+                
+                <div className="bg-white/80 dark:bg-slate-800/80 rounded-lg p-6 shadow-md text-center">
+                  <div className="mb-4 bg-amber-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto">
+                    <CalendarDays className="h-6 w-6 text-amber-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">Safety Workshops</h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">Regular safety drills and emergency response training.</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* About & Contact Section */}
+            <div className="bg-white/90 dark:bg-slate-900/90 rounded-xl p-8 shadow-lg mb-16">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                    <School className="h-6 w-6 text-amber-500" />
+                    About University of Limpopo
+                  </h2>
+                  <p className="text-gray-700 dark:text-gray-300 mb-4">
+                    The University of Limpopo is committed to providing a safe and secure environment for all students, 
+                    faculty, and staff. Our emergency response system ensures that help is always available when needed.
+                  </p>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    Established with the mission to empower students through education, we prioritize the wellbeing 
+                    and safety of our campus community through innovative technology solutions.
+                  </p>
+                </div>
+                
+                <div>
+                  <h2 className="text-2xl font-bold mb-4">Contact Information</h2>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <Phone className="h-5 w-5 text-amber-500 mt-1" />
+                      <div>
+                        <p className="font-medium">Emergency Hotline</p>
+                        <p className="text-gray-700 dark:text-gray-300">+27 15 268 9111</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <Mail className="h-5 w-5 text-amber-500 mt-1" />
+                      <div>
+                        <p className="font-medium">Email</p>
+                        <p className="text-gray-700 dark:text-gray-300">emergency@ul.ac.za</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <School className="h-5 w-5 text-amber-500 mt-1" />
+                      <div>
+                        <p className="font-medium">Address</p>
+                        <p className="text-gray-700 dark:text-gray-300">
+                          University of Limpopo, Sovenga, 0727, Limpopo, South Africa
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Social Media & Footer */}
+            <div className="mt-8">
+              <div className="flex justify-center space-x-6 mb-8">
+                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" 
+                   className="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 transition-colors">
+                  <Facebook className="h-5 w-5" />
+                </a>
+                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"
+                   className="bg-pink-600 text-white p-3 rounded-full hover:bg-pink-700 transition-colors">
+                  <Instagram className="h-5 w-5" />
+                </a>
+                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"
+                   className="bg-blue-700 text-white p-3 rounded-full hover:bg-blue-800 transition-colors">
+                  <Linkedin className="h-5 w-5" />
+                </a>
+              </div>
+              
+              <Separator className="mb-8" />
+              
+              <div className="text-center text-sm text-gray-500 mb-8">
+                <p>© {new Date().getFullYear()} University of Limpopo. All rights reserved.</p>
+                <p className="mt-2">
+                  This emergency system is designed to provide immediate assistance to UL students and staff.
+                </p>
+              </div>
             </div>
           </div>
         </div>

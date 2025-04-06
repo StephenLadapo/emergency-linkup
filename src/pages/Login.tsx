@@ -48,6 +48,12 @@ const Login = () => {
       <div className="w-full max-w-md">
         <AuthForm mode="login" onSubmit={handleLogin} />
         
+        <div className="mt-2 text-center">
+          <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+            Forgot your password?
+          </Link>
+        </div>
+        
         <div className="mt-6 text-center text-sm">
           Don't have an account?{' '}
           <Link to="/register" className="underline text-primary">
