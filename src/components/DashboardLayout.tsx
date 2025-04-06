@@ -2,7 +2,7 @@
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { MapPin } from "lucide-react";
 import DashboardSidebar from "./DashboardSidebar";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import EmergencyButton from "./EmergencyButton";
 import { Card, CardContent } from "./ui/card";
@@ -10,6 +10,15 @@ import { Card, CardContent } from "./ui/card";
 const DashboardLayout = () => {
   const [unusualSoundDetected, setUnusualSoundDetected] = useState(false);
   const [countdownTime, setCountdownTime] = useState(160);
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Redirect to dashboard home if on the base dashboard path
+  useEffect(() => {
+    if (location.pathname === '/dashboard') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [location.pathname, navigate]);
   
   // Simulate countdown when unusual sound is detected
   useEffect(() => {
