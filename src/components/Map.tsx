@@ -1,10 +1,13 @@
 
 import { useEffect, useRef, useState } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, Share2 } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const Map = () => {
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [address, setAddress] = useState<string | null>(null);
   const [watchId, setWatchId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -14,10 +17,12 @@ const Map = () => {
       // Get initial location
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setLocation({
+          const newLocation = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
-          });
+          };
+          setLocation(newLocation);
+          fetchAddress(newLocation);
           setLoading(false);
         },
         (err) => {
@@ -30,10 +35,12 @@ const Map = () => {
       // Start watching position for real-time updates
       const id = navigator.geolocation.watchPosition(
         (position) => {
-          setLocation({
+          const newLocation = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
-          });
+          };
+          setLocation(newLocation);
+          fetchAddress(newLocation);
           setLoading(false);
         },
         (err) => {
@@ -61,8 +68,43 @@ const Map = () => {
     };
   }, []);
 
-  // In a real app, we would use a mapping library like Mapbox or Google Maps
-  // For now, we're just displaying coordinates
+  // Mock function to fetch address from coordinates (would use a real geocoding service in production)
+  const fetchAddress = async (location: {lat: number, lng: number}) => {
+    try {
+      // This would be a call to a geocoding API like Google Maps, Mapbox, etc.
+      // For now, we'll simulate it with a mock address
+      setTimeout(() => {
+        setAddress("University of Limpopo, Sovenga, Polokwane");
+      }, 500);
+    } catch (err) {
+      console.error('Error fetching address:', err);
+    }
+  };
+
+  const shareLocation = async () => {
+    if (!location) return;
+    
+    try {
+      // In a real app, this would send the location to emergency contacts or services
+      const shareText = `My current location: ${address || 'Unknown'}\nCoordinates: ${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}\nhttps://maps.google.com/?q=${location.lat},${location.lng}`;
+      
+      if (navigator.share) {
+        await navigator.share({
+          title: 'My Emergency Location',
+          text: shareText,
+          url: `https://maps.google.com/?q=${location.lat},${location.lng}`
+        });
+        toast.success('Location shared successfully!');
+      } else {
+        // Fallback for browsers without Web Share API
+        await navigator.clipboard.writeText(shareText);
+        toast.success('Location copied to clipboard!');
+      }
+    } catch (err) {
+      console.error('Error sharing location:', err);
+      toast.error('Failed to share location');
+    }
+  };
   
   return (
     <Card className="h-full">
@@ -80,6 +122,13 @@ const Map = () => {
               <MapPin className="h-5 w-5 text-primary" />
               <span className="font-medium">Your Location</span>
             </div>
+            
+            {address && (
+              <div className="text-center p-3 bg-muted/20 rounded-md w-full">
+                <p className="font-medium">{address}</p>
+              </div>
+            )}
+            
             <div className="text-center text-sm text-muted-foreground">
               <p>For a real implementation, this would show a map.</p>
               <p className="mt-2">Current coordinates:</p>
@@ -87,6 +136,12 @@ const Map = () => {
                 {location?.lat.toFixed(6)}, {location?.lng.toFixed(6)}
               </p>
             </div>
+            
+            <Button onClick={shareLocation} variant="outline" className="flex gap-2">
+              <Share2 className="h-4 w-4" />
+              Share Location
+            </Button>
+            
             <div className="text-xs text-muted-foreground text-center mt-2">
               Your location is continuously tracked for emergency services
             </div>
