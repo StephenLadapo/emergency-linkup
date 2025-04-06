@@ -1,5 +1,6 @@
 
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { MapPin } from "lucide-react";
 import DashboardSidebar from "./DashboardSidebar";
 import { Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
