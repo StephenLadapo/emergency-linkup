@@ -37,10 +37,10 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-white/10 backdrop-blur-md border-white/20">
+    <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle className="text-white">{mode === 'login' ? 'Login' : 'Register'}</CardTitle>
-        <CardDescription className="text-white/70">
+        <CardTitle>{mode === 'login' ? 'Login' : 'Register'}</CardTitle>
+        <CardDescription>
           {mode === 'login' 
             ? 'Enter your credentials to access the emergency system.' 
             : 'Create an account using your university email.'}
@@ -51,32 +51,30 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
           {mode === 'register' && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-white">Full Name</Label>
+                <Label htmlFor="fullName">Full Name</Label>
                 <Input 
                   id="fullName"
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
-                  className="bg-white/20 border-white/20 text-white placeholder:text-white/50"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="studentNumber" className="text-white">Student Number</Label>
+                <Label htmlFor="studentNumber">Student Number</Label>
                 <Input 
                   id="studentNumber"
                   type="text" 
                   value={studentNumber}
                   onChange={(e) => setStudentNumber(e.target.value)}
                   required
-                  className="bg-white/20 border-white/20 text-white placeholder:text-white/50"
                 />
               </div>
             </>
           )}
           
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-white">University Email</Label>
+            <Label htmlFor="email">University Email</Label>
             <Input 
               id="email"
               type="email" 
@@ -84,26 +82,24 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-white/20 border-white/20 text-white placeholder:text-white/50"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-white">Password</Label>
+            <Label htmlFor="password">Password</Label>
             <Input 
               id="password"
               type="password"
               value={password} 
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-white/20 border-white/20 text-white placeholder:text-white/50"
             />
           </div>
         </form>
       </CardContent>
       <CardFooter>
         <Button 
-          className="w-full bg-amber-500 hover:bg-amber-600 text-white" 
+          className="w-full" 
           onClick={handleSubmit} 
           disabled={loading}
         >

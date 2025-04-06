@@ -104,15 +104,6 @@
   }
 }
 
-/* UL Background Images */
-.bg-ul-campus {
-  background-image: url('/lovable-uploads/e8f04c04-3714-46cf-b0ea-3817dab53895.png');
-}
-
-.bg-ul-sports-ground {
-  background-image: url('/lovable-uploads/b339c08e-fa10-4289-8bb6-3e280b2b2528.png');
-}
-
 @keyframes pulse {
   0%, 100% {
     transform: scale(1);
