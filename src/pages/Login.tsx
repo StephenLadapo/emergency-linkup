@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '@/components/AuthForm';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import Logo from '@/components/Logo';
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -39,6 +40,7 @@ const Login = () => {
   return (
     <div className="container flex flex-col items-center justify-center min-h-screen py-12">
       <div className="flex flex-col items-center space-y-2 text-center mb-8">
+        <Logo className="mb-4" />
         <h1 className="text-3xl font-bold">Welcome Back</h1>
         <p className="text-muted-foreground">
           Sign in to access the University of Limpopo Emergency System

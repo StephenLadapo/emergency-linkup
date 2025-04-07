@@ -19,10 +19,10 @@ const DashboardLayout = () => {
   const isMobile = useIsMobile();
   const { toast } = useToast();
   
-  // Redirect to dashboard home if on the base dashboard path
+  // Redirect to profile page if on the base dashboard path
   useEffect(() => {
     if (location.pathname === '/dashboard') {
-      navigate('/dashboard', { replace: true });
+      navigate('/dashboard/profile', { replace: true });
     }
   }, [location.pathname, navigate]);
   
@@ -69,6 +69,7 @@ const DashboardLayout = () => {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('user');
     toast({
       title: "Logged out successfully",
       description: "You have been logged out of your account",

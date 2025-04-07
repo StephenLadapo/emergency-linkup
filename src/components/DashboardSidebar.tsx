@@ -7,7 +7,6 @@ import {
   Bell,
   History,
   Settings,
-  Home,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -28,9 +27,9 @@ import {
 // Dashboard menu items
 const menuItems = [
   {
-    title: "Home",
-    icon: Home,
-    path: "/dashboard",
+    title: "Profile",
+    icon: User,
+    path: "/dashboard/profile",
   },
   {
     title: "Location",
@@ -46,11 +45,6 @@ const menuItems = [
     title: "AI Assistant",
     icon: MessagesSquare,
     path: "/dashboard/assistant",
-  },
-  {
-    title: "Profile",
-    icon: User,
-    path: "/dashboard/profile",
   },
   {
     title: "Messages",
