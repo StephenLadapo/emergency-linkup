@@ -4,14 +4,16 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Bot, User } from 'lucide-react';
+import { Send, Bot, User, Bandage } from 'lucide-react';
 import { toast } from "sonner";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type Message = {
   id: number;
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
+  options?: string[];
 };
 
 const ChatBot = () => {
@@ -25,7 +27,9 @@ const ChatBot = () => {
   ]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   // Enhanced first aid responses with more detailed instructions
   const firstAidResponses: Record<string, string> = {
@@ -44,6 +48,14 @@ const ChatBot = () => {
     'heatstroke': "For heatstroke: 1) Move to a cool, shaded area immediately. 2) Call emergency services. 3) Remove excess clothing. 4) Cool the body quickly: place ice packs on neck, armpits, groin; spray with cool water; fan continuously. 5) If conscious and alert, give small sips of cool water (not cold). 6) Monitor body temperature if possible. 7) Signs of heatstroke: high body temperature, altered mental state, hot/dry skin, rapid strong pulse."
   };
 
+  // Injury options for interactive responses
+  const injuryOptions = [
+    "Bleeding/Cuts", "Burns", "Choking", "Heart Attack", 
+    "Fracture/Broken Bone", "Seizure", "Snake Bite", 
+    "Unconscious Person", "Shock", "Asthma Attack", 
+    "Allergic Reaction", "Drowning", "Heatstroke"
+  ];
+
   // Scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -52,6 +64,55 @@ const ChatBot = () => {
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNewMessage(e.target.value);
+  };
+
+  // Handle option selection
+  const handleOptionSelect = (option: string) => {
+    setSelectedOption(option);
+    
+    // Map the selected option to first aid topic
+    const topicMap: Record<string, string> = {
+      "Bleeding/Cuts": "bleeding",
+      "Burns": "burn",
+      "Choking": "choking",
+      "Heart Attack": "heart attack",
+      "Fracture/Broken Bone": "fracture",
+      "Seizure": "seizure",
+      "Snake Bite": "snake bite",
+      "Unconscious Person": "unconscious",
+      "Shock": "shock",
+      "Asthma Attack": "asthma",
+      "Allergic Reaction": "allergic reaction",
+      "Drowning": "drowning",
+      "Heatstroke": "heatstroke"
+    };
+    
+    const selectedTopic = topicMap[option] || option.toLowerCase();
+    
+    // Add user message
+    const userMessage: Message = {
+      id: Date.now(),
+      text: option,
+      sender: 'user',
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    
+    // Add bot response
+    setTimeout(() => {
+      const botResponse = firstAidResponses[selectedTopic] || 
+        "I don't have specific information about that injury. Please describe your situation in more detail so I can provide appropriate guidance.";
+      
+      const botMessage: Message = {
+        id: Date.now() + 1,
+        text: botResponse,
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, botMessage]);
+    }, 500);
   };
 
   // Enhanced message processing system with improved matching
@@ -75,6 +136,7 @@ const ChatBot = () => {
       
       const lowercaseMsg = newMessage.toLowerCase();
       let botResponse = "I'm here to help in emergencies. Can you provide more details about your situation?";
+      let options: string[] = [];
       
       // Check for first aid related keywords with improved matching
       const foundFirstAidTopic = Object.keys(firstAidResponses).find(topic => 
@@ -83,22 +145,29 @@ const ChatBot = () => {
       
       if (foundFirstAidTopic) {
         botResponse = firstAidResponses[foundFirstAidTopic];
-      } 
+      }
+      // Check for injury or help related terms
+      else if (
+        lowercaseMsg.includes('injury') || 
+        lowercaseMsg.includes('hurt') || 
+        lowercaseMsg.includes('pain') ||
+        lowercaseMsg.includes('wound') ||
+        lowercaseMsg.includes('injured') ||
+        lowercaseMsg.includes('emergency') ||
+        lowercaseMsg.includes('accident') ||
+        lowercaseMsg.includes('first aid')
+      ) {
+        botResponse = "I can provide first aid guidance. What type of injury are you dealing with?";
+        options = injuryOptions;
+      }
       // Enhanced emergency keyword recognition with more patterns
       else if (
         lowercaseMsg.includes('help') || 
         lowercaseMsg.includes('emergency') ||
-        lowercaseMsg.includes('hurt') ||
-        lowercaseMsg.includes('pain') ||
-        lowercaseMsg.includes('injured') ||
-        lowercaseMsg.includes('accident') ||
         lowercaseMsg.includes('blood') ||
         lowercaseMsg.includes('fell') ||
         lowercaseMsg.includes('fall') ||
-        lowercaseMsg.includes('wound') ||
         lowercaseMsg.includes('cut') ||
-        lowercaseMsg.includes('injury') ||
-        lowercaseMsg.includes('first aid') ||
         lowercaseMsg.includes('medical')
       ) {
         botResponse = "I understand you need urgent help. Please tell me:\n\n1. What type of injury/emergency?\n2. Is the person conscious and breathing?\n3. Is there severe bleeding?\n\nI can provide first aid guidance while you call emergency services at 10111 (national emergency) or campus security.";
@@ -139,7 +208,8 @@ const ChatBot = () => {
         id: Date.now() + 1,
         text: botResponse,
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(),
+        options: options.length > 0 ? options : undefined
       };
       
       setMessages(prev => [...prev, botMessage]);
@@ -159,7 +229,7 @@ const ChatBot = () => {
   };
 
   return (
-    <Card className="flex flex-col h-full shadow-lg border-amber-200">
+    <Card className={`flex flex-col h-full shadow-lg border-amber-200 ${isMobile ? 'w-full' : ''}`}>
       <CardHeader className="pb-2 bg-gradient-to-r from-amber-50 to-blue-50 dark:from-amber-900/20 dark:to-blue-900/20">
         <CardTitle className="flex items-center gap-2">
           <Bot className="h-5 w-5 text-amber-500" />
@@ -197,6 +267,24 @@ const ChatBot = () => {
                     </span>
                   </div>
                   <p className="whitespace-pre-line">{message.text}</p>
+                  
+                  {/* Render options if available */}
+                  {message.options && message.options.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {message.options.map((option) => (
+                        <Button
+                          key={option}
+                          size="sm"
+                          variant="secondary"
+                          className="text-xs py-1 px-2 h-auto flex items-center bg-white/90 dark:bg-gray-800/90 text-black dark:text-white"
+                          onClick={() => handleOptionSelect(option)}
+                        >
+                          <Bandage className="h-3 w-3 mr-1" />
+                          {option}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

@@ -1,17 +1,23 @@
 
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { MapPin } from "lucide-react";
+import { LogOut, MapPin, Moon, Sun } from "lucide-react";
 import DashboardSidebar from "./DashboardSidebar";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import EmergencyButton from "./EmergencyButton";
 import { Card, CardContent } from "./ui/card";
+import { Button } from "./ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useToast } from "./ui/use-toast";
 
 const DashboardLayout = () => {
   const [unusualSoundDetected, setUnusualSoundDetected] = useState(false);
   const [countdownTime, setCountdownTime] = useState(160);
+  const [darkMode, setDarkMode] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useIsMobile();
+  const { toast } = useToast();
   
   // Redirect to dashboard home if on the base dashboard path
   useEffect(() => {
@@ -19,6 +25,15 @@ const DashboardLayout = () => {
       navigate('/dashboard', { replace: true });
     }
   }, [location.pathname, navigate]);
+  
+  // Set dark mode based on user preference
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
   
   // Simulate countdown when unusual sound is detected
   useEffect(() => {
@@ -53,6 +68,18 @@ const DashboardLayout = () => {
     setCountdownTime(160);
   };
 
+  const handleLogout = () => {
+    toast({
+      title: "Logged out successfully",
+      description: "You have been logged out of your account",
+    });
+    navigate('/login');
+  };
+
+  const toggleDarkMode = () => {
+    setDarkMode(prev => !prev);
+  };
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex w-full min-h-screen">
@@ -63,9 +90,17 @@ const DashboardLayout = () => {
               <SidebarTrigger className="mr-2 lg:hidden" />
               <h1 className="text-2xl font-bold">Emergency Dashboard</h1>
             </div>
-            <div className="bg-muted/50 p-2 rounded-md text-sm flex items-center">
-              <MapPin className="h-4 w-4 mr-1" />
-              <span>Campus Location Active</span>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={toggleDarkMode} className="rounded-full">
+                {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-full text-red-500">
+                <LogOut className="h-5 w-5" />
+              </Button>
+              <div className="bg-muted/50 p-2 rounded-md text-sm flex items-center">
+                <MapPin className="h-4 w-4 mr-1" />
+                <span>Campus Location Active</span>
+              </div>
             </div>
           </div>
           
