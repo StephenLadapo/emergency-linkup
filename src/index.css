@@ -132,6 +132,10 @@
   @apply bg-gradient-to-r from-amber-500 to-secondary bg-clip-text text-transparent;
 }
 
+.text-gradient-primary {
+  @apply bg-gradient-to-r from-amber-500 via-secondary to-blue-500 bg-clip-text text-transparent;
+}
+
 /* UL themed styles */
 .ul-pattern {
   background-color: #f8f9fa;
@@ -149,4 +153,22 @@
 
 .ul-card {
   @apply border border-amber-200 bg-gradient-to-br from-amber-50 to-blue-50 dark:from-amber-900/20 dark:to-blue-900/20;
+}
+
+/* New background styles */
+.campus-bg {
+  @apply relative;
+}
+
+.campus-bg::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-b from-blue-900/70 to-amber-700/70 mix-blend-multiply z-0;
+}
+
+.campus-bg-image {
+  @apply absolute inset-0 w-full h-full object-cover z-[-1];
+}
+
+.auth-container {
+  @apply bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-xl p-8 shadow-2xl border border-amber-200 dark:border-amber-900/30 z-10;
 }

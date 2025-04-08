@@ -37,76 +37,67 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>{mode === 'login' ? 'Login' : 'Register'}</CardTitle>
-        <CardDescription>
-          {mode === 'login' 
-            ? 'Enter your credentials to access the emergency system.' 
-            : 'Create an account using your university email.'}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === 'register' && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input 
-                  id="fullName"
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="studentNumber">Student Number</Label>
-                <Input 
-                  id="studentNumber"
-                  type="text" 
-                  value={studentNumber}
-                  onChange={(e) => setStudentNumber(e.target.value)}
-                  required
-                />
-              </div>
-            </>
-          )}
-          
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {mode === 'register' && (
+        <>
           <div className="space-y-2">
-            <Label htmlFor="email">University Email</Label>
+            <Label htmlFor="fullName" className="text-foreground">Full Name</Label>
             <Input 
-              id="email"
-              type="email" 
-              placeholder="yourname@keyaka.ul.ac.za"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="fullName"
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-amber-200 dark:border-amber-900/30"
               required
             />
           </div>
-          
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="studentNumber" className="text-foreground">Student Number</Label>
             <Input 
-              id="password"
-              type="password"
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)}
+              id="studentNumber"
+              type="text" 
+              value={studentNumber}
+              onChange={(e) => setStudentNumber(e.target.value)}
+              className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-amber-200 dark:border-amber-900/30"
               required
             />
           </div>
-        </form>
-      </CardContent>
-      <CardFooter>
-        <Button 
-          className="w-full" 
-          onClick={handleSubmit} 
-          disabled={loading}
-        >
-          {loading ? 'Processing...' : mode === 'login' ? 'Login' : 'Register'}
-        </Button>
-      </CardFooter>
-    </Card>
+        </>
+      )}
+      
+      <div className="space-y-2">
+        <Label htmlFor="email" className="text-foreground">University Email</Label>
+        <Input 
+          id="email"
+          type="email" 
+          placeholder="yourname@keyaka.ul.ac.za"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-amber-200 dark:border-amber-900/30"
+          required
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="password" className="text-foreground">Password</Label>
+        <Input 
+          id="password"
+          type="password"
+          value={password} 
+          onChange={(e) => setPassword(e.target.value)}
+          className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-amber-200 dark:border-amber-900/30"
+          required
+        />
+      </div>
+      
+      <Button 
+        type="submit"
+        className="w-full mt-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700" 
+        disabled={loading}
+      >
+        {loading ? 'Processing...' : mode === 'login' ? 'Login' : 'Register'}
+      </Button>
+    </form>
   );
 };
 
