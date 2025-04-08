@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -109,7 +110,7 @@ const Index = () => {
               <Button size="lg" className="px-8 py-6 text-lg rounded-full shadow-lg hover:shadow-xl bg-amber-500 hover:bg-amber-600" onClick={() => navigate('/register')}>
                 Register with University Email
               </Button>
-              <Button size="lg" variant="outline" className="px-8 py-6 text-lg rounded-full shadow hover:shadow-md border-white text-white hover:bg-white/10" onClick={() => navigate('/login')}>
+              <Button size="lg" className="px-8 py-6 text-lg rounded-full shadow-lg hover:shadow-xl bg-amber-500 hover:bg-amber-600" onClick={() => navigate('/login')}>
                 Login to Your Account
               </Button>
             </div>
