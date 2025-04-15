@@ -7,6 +7,7 @@ export interface UserData {
   studentNumber?: string;
   createdAt?: Date;
   updatedAt?: Date;
+  emailConfirmed?: boolean;
 }
 
 // Interface for authentication data
@@ -43,12 +44,78 @@ class DatabaseService {
       ...userData,
       id: Date.now().toString(),
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      emailConfirmed: false // Initially set to false until email is confirmed
     };
     
     this.users.push(newUser);
     
+    // Send confirmation email
+    this.sendConfirmationEmail(newUser);
+    
     return newUser;
+  }
+  
+  // Send confirmation email
+  async sendConfirmationEmail(user: UserData): Promise<boolean> {
+    console.log(`Sending confirmation email to ${user.email}`);
+    
+    // In a real implementation, you would:
+    // 1. Generate a confirmation token
+    // 2. Create a confirmation link with the token
+    // 3. Send an actual email using a service like SendGrid, Mailgun, etc.
+    
+    // For now, we'll simulate the email sending process
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      console.log(`
+        Email sent to: ${user.email}
+        Subject: Welcome to University of Limpopo Emergency System - Confirm Your Email
+        Body: 
+        Dear ${user.fullName},
+        
+        Thank you for registering with the University of Limpopo Emergency System.
+        Please confirm your email address by clicking the link below:
+        
+        http://localhost:3000/confirm-email?token=mock-token-${user.id}
+        
+        This link will expire in 24 hours.
+        
+        If you did not create this account, please ignore this email.
+        
+        Best regards,
+        University of Limpopo Emergency Team
+      `);
+      
+      return true;
+    } catch (error) {
+      console.error('Error sending confirmation email:', error);
+      return false;
+    }
+  }
+  
+  // Confirm user email
+  async confirmEmail(token: string): Promise<boolean> {
+    console.log('Confirming email with token:', token);
+    
+    // Extract user ID from token (in a real implementation, you would validate the token)
+    const userId = token.replace('mock-token-', '');
+    
+    const userIndex = this.users.findIndex(user => user.id === userId);
+    if (userIndex === -1) {
+      throw new Error('Invalid confirmation token');
+    }
+    
+    // Update user's email confirmation status
+    this.users[userIndex] = {
+      ...this.users[userIndex],
+      emailConfirmed: true,
+      updatedAt: new Date()
+    };
+    
+    return true;
   }
   
   // Login user

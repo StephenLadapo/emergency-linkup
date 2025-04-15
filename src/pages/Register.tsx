@@ -11,17 +11,6 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const sendConfirmationEmail = async (email: string, fullName: string) => {
-    // This is a placeholder for sending a confirmation email
-    console.log(`Sending confirmation email to ${email}`);
-    
-    // Simulate sending email
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // In production, use an email service API or backend function
-    return true;
-  };
-
   const handleRegister = async (email: string, password: string, fullName?: string, studentNumber?: string) => {
     setLoading(true);
     
@@ -40,14 +29,8 @@ const Register = () => {
       
       await dbService.registerUser(userData, password);
       
-      // Send confirmation email
-      const emailSent = await sendConfirmationEmail(email, fullName);
-      
-      if (emailSent) {
-        toast.success('Registration successful! Confirmation email has been sent.');
-      } else {
-        toast.warning('Registration successful, but confirmation email could not be sent.');
-      }
+      // Success message about confirmation email
+      toast.success('Registration successful! Please check your email to confirm your account.');
       
       // Store basic user info in localStorage (for now)
       localStorage.setItem('user', JSON.stringify({
