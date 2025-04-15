@@ -5,13 +5,14 @@ import AuthForm from '@/components/AuthForm';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Logo from '@/components/Logo';
+import { dbService } from '@/services/databaseService';
 
 const Register = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const sendConfirmationEmail = async (email: string, fullName: string) => {
-    // In a real implementation, this would call a backend service
+    // This is a placeholder for sending a confirmation email
     console.log(`Sending confirmation email to ${email}`);
     
     // Simulate sending email
@@ -25,28 +26,44 @@ const Register = () => {
     setLoading(true);
     
     try {
-      // In a real app, this would connect to an authentication service
-      console.log('Registration with:', { email, fullName, studentNumber });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Send confirmation email if name is provided
-      if (fullName) {
-        const emailSent = await sendConfirmationEmail(email, fullName);
-        if (emailSent) {
-          toast.success('Registration successful! Confirmation email has been sent.');
-        } else {
-          toast.warning('Registration successful, but confirmation email could not be sent.');
-        }
-      } else {
-        toast.success('Registration successful! Please log in.');
+      // Validate required fields
+      if (!fullName || !studentNumber) {
+        throw new Error('Missing required fields');
       }
+      
+      // Register user in database
+      const userData = {
+        fullName,
+        email,
+        studentNumber
+      };
+      
+      await dbService.registerUser(userData, password);
+      
+      // Send confirmation email
+      const emailSent = await sendConfirmationEmail(email, fullName);
+      
+      if (emailSent) {
+        toast.success('Registration successful! Confirmation email has been sent.');
+      } else {
+        toast.warning('Registration successful, but confirmation email could not be sent.');
+      }
+      
+      // Store basic user info in localStorage (for now)
+      localStorage.setItem('user', JSON.stringify({
+        name: fullName,
+        email,
+        photoUrl: '',
+      }));
       
       navigate('/login');
     } catch (error) {
       console.error('Registration error:', error);
-      toast.error('Registration failed. Please try again.');
+      if (error instanceof Error) {
+        toast.error(`Registration failed: ${error.message}`);
+      } else {
+        toast.error('Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
