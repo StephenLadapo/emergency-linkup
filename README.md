@@ -1,69 +1,58 @@
-# Welcome to your Lovable project
 
-## Project info
+# University of Limpopo Emergency System
 
-**URL**: https://lovable.dev/projects/956b9256-554f-442e-ba40-10015872a126
+A web-based emergency response system designed for University of Limpopo students. This project aims to provide quick access to emergency services and first aid guidance for students on campus.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- Emergency assistance request
+- Location tracking
+- First aid guidance
+- AI-powered health assistant
+- Student authentication with university email
 
-**Use Lovable**
+## Technologies Used
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/956b9256-554f-442e-ba40-10015872a126) and start prompting.
+- React
+- TypeScript
+- Tailwind CSS
+- Vite
+- React Router
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+1. Clone the repository
+```bash
+git clone <repository-url>
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+2. Install dependencies
+```bash
+npm install
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. Start the development server
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+4. Open http://localhost:8080 to view it in the browser
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Project Structure
 
-**Use GitHub Codespaces**
+```
+src/
+  ├── components/     # Reusable UI components
+  ├── pages/         # Page components
+  ├── hooks/         # Custom React hooks
+  ├── lib/           # Utility functions
+  └── main.tsx       # Entry point
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Contributing
 
-## What technologies are used for this project?
+This is a student project for the University of Limpopo. Feel free to contribute by opening issues or submitting pull requests.
 
-This project is built with .
+## License
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/956b9256-554f-442e-ba40-10015872a126) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+MIT License
