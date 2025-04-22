@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
 interface AuthFormProps {
@@ -17,21 +18,10 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
   const [studentNumber, setStudentNumber] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const validateUniversityEmail = (email: string): boolean => {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@keyaka\.ul\.ac\.za$/;
-    return emailRegex.test(email);
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateUniversityEmail(email)) {
+    if (!email.endsWith('@keyaka.ul.ac.za')) {
       toast.error('Please use your university email (@keyaka.ul.ac.za)');
-      return;
-    }
-    
-    if (password.length < 8) {
-      toast.error('Password must be at least 8 characters long');
       return;
     }
     
@@ -86,7 +76,6 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
           className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-amber-200 dark:border-amber-900/30"
           required
         />
-        <p className="text-xs text-muted-foreground">Must use @keyaka.ul.ac.za university email</p>
       </div>
       
       <div className="space-y-2">
@@ -98,9 +87,7 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
           onChange={(e) => setPassword(e.target.value)}
           className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-amber-200 dark:border-amber-900/30"
           required
-          minLength={8}
         />
-        <p className="text-xs text-muted-foreground">Password must be at least 8 characters</p>
       </div>
       
       <Button 

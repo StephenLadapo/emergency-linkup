@@ -5,7 +5,6 @@ import AuthForm from '@/components/AuthForm';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Logo from '@/components/Logo';
-import { dbService } from '@/services/databaseService';
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -15,17 +14,16 @@ const Login = () => {
     setLoading(true);
     
     try {
-      // Login with database service
-      const user = await dbService.loginUser({ email, password });
+      // In a real app, this would connect to an authentication service
+      console.log('Login attempt with:', { email });
       
-      if (!user) {
-        throw new Error('Invalid email or password');
-      }
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Store user info in localStorage (for now)
+      // Mock successful login
       localStorage.setItem('user', JSON.stringify({
-        name: user.fullName,
-        email: user.email,
+        name: 'Test Student',
+        email,
         photoUrl: '',
       }));
       
@@ -33,11 +31,7 @@ const Login = () => {
       navigate('/dashboard/profile');
     } catch (error) {
       console.error('Login error:', error);
-      if (error instanceof Error) {
-        toast.error(`Login failed: ${error.message}`);
-      } else {
-        toast.error('Login failed. Please check your credentials.');
-      }
+      toast.error('Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }

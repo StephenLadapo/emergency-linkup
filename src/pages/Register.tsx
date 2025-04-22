@@ -5,48 +5,48 @@ import AuthForm from '@/components/AuthForm';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Logo from '@/components/Logo';
-import { dbService } from '@/services/databaseService';
 
 const Register = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const sendConfirmationEmail = async (email: string, fullName: string) => {
+    // In a real implementation, this would call a backend service
+    console.log(`Sending confirmation email to ${email}`);
+    
+    // Simulate sending email
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // In production, use an email service API or backend function
+    return true;
+  };
+
   const handleRegister = async (email: string, password: string, fullName?: string, studentNumber?: string) => {
     setLoading(true);
     
     try {
-      // Validate required fields
-      if (!fullName || !studentNumber) {
-        throw new Error('Missing required fields');
+      // In a real app, this would connect to an authentication service
+      console.log('Registration with:', { email, fullName, studentNumber });
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Send confirmation email if name is provided
+      if (fullName) {
+        const emailSent = await sendConfirmationEmail(email, fullName);
+        if (emailSent) {
+          toast.success('Registration successful! Confirmation email has been sent.');
+        } else {
+          toast.warning('Registration successful, but confirmation email could not be sent.');
+        }
+      } else {
+        toast.success('Registration successful! Please log in.');
       }
-      
-      // Register user in database
-      const userData = {
-        fullName,
-        email,
-        studentNumber
-      };
-      
-      await dbService.registerUser(userData, password);
-      
-      // Success message about confirmation email
-      toast.success('Registration successful! Please check your email to confirm your account.');
-      
-      // Store basic user info in localStorage (for now)
-      localStorage.setItem('user', JSON.stringify({
-        name: fullName,
-        email,
-        photoUrl: '',
-      }));
       
       navigate('/login');
     } catch (error) {
       console.error('Registration error:', error);
-      if (error instanceof Error) {
-        toast.error(`Registration failed: ${error.message}`);
-      } else {
-        toast.error('Registration failed. Please try again.');
-      }
+      toast.error('Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
