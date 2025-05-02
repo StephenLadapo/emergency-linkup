@@ -17,10 +17,36 @@ const Login = () => {
       // In a real app, this would connect to an authentication service
       console.log('Login attempt with:', { email });
       
+      // Check if the user exists in our pendingUsers (for email verification)
+      const pendingUsers = JSON.parse(localStorage.getItem('pendingUsers') || '{}');
+      const user = pendingUsers[email];
+      
+      if (user && !user.isVerified) {
+        toast.error('Please verify your email before logging in.');
+        setLoading(false);
+        return;
+      }
+      
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock successful login
+      // For demo, check if user exists in pendingUsers and is verified
+      if (user && user.isVerified && user.password === password) {
+        // Create a verified user in localStorage
+        localStorage.setItem('user', JSON.stringify({
+          name: user.name,
+          email,
+          studentNumber: user.studentNumber,
+          photoUrl: '',
+          isVerified: true
+        }));
+        
+        toast.success('Login successful!');
+        navigate('/dashboard/profile');
+        return;
+      }
+      
+      // Mock successful login for non-verified flow (for backward compatibility)
       localStorage.setItem('user', JSON.stringify({
         name: 'Test Student',
         email,
