@@ -5,6 +5,12 @@ import AuthForm from '@/components/AuthForm';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Logo from '@/components/Logo';
+import emailjs from 'emailjs-com';
+
+// EmailJS configuration
+const EMAILJS_SERVICE_ID = 'service_vtt07am'; // Replace with your actual service ID
+const EMAILJS_TEMPLATE_ID = 'template_4mgc5lf'; // Replace with your actual template ID
+const EMAILJS_USER_ID = 'ZA4pdVplYXQ8lSpQT'; // Replace with your actual user ID
 
 const Register = () => {
   const [loading, setLoading] = useState(false);
@@ -18,13 +24,28 @@ const Register = () => {
     return `${timestamp}-${randomString}-${email.replace('@', '-at-')}`;
   };
 
-  const sendConfirmationEmail = async (email: string, fullName: string): Promise<boolean> => {
-    // In a real implementation, this would call a backend service
-    console.log(`Sending confirmation email to ${email}`);
-    
+  const sendConfirmationEmail = async (email: string, fullName: string, token: string): Promise<boolean> => {
     try {
-      // Generate a confirmation token
-      const token = generateConfirmationToken(email);
+      // Generate the confirmation URL
+      const confirmationUrl = `${window.location.origin}/confirm-email?token=${token}`;
+      
+      // Prepare template parameters
+      const templateParams = {
+        to_name: fullName,
+        to_email: email,
+        confirmation_link: confirmationUrl,
+        from_name: 'University of Limpopo Emergency System'
+      };
+      
+      // Send email using EmailJS
+      const response = await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        templateParams,
+        EMAILJS_USER_ID
+      );
+      
+      console.log('Email successfully sent:', response);
       
       // Store the token and email in localStorage for demo purposes
       // In a real app, this would be stored in a database
@@ -36,14 +57,6 @@ const Register = () => {
       };
       localStorage.setItem('pendingConfirmations', JSON.stringify(pendingConfirmations));
       
-      // Simulate sending email
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // For demo purposes, we'll log the confirmation link
-      const confirmationUrl = `/confirm-email?token=${token}`;
-      console.log(`Confirmation link: ${window.location.origin}${confirmationUrl}`);
-      
-      // In production, use an email service API or backend function
       return true;
     } catch (error) {
       console.error('Error sending confirmation email:', error);
@@ -58,12 +71,13 @@ const Register = () => {
       // In a real app, this would connect to an authentication service
       console.log('Registration with:', { email, fullName, studentNumber });
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Generate confirmation token
+      const token = generateConfirmationToken(email);
       
       // Send confirmation email if name is provided
       if (fullName) {
-        const emailSent = await sendConfirmationEmail(email, fullName);
+        const emailSent = await sendConfirmationEmail(email, fullName, token);
+        
         if (emailSent) {
           // Store the user data in temporary storage
           const pendingUsers = JSON.parse(localStorage.getItem('pendingUsers') || '{}');
@@ -79,7 +93,7 @@ const Register = () => {
           
           toast.success('Registration successful! Please check your email for a confirmation link.');
         } else {
-          toast.warning('Registration successful, but confirmation email could not be sent.');
+          toast.error('Registration successful, but confirmation email could not be sent. Please try again.');
         }
       } else {
         toast.success('Registration successful! Please log in.');

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ const ConfirmEmail = () => {
 
       if (!token) {
         setVerificationStatus('error');
+        toast.error('Invalid verification link. No token provided.');
         return;
       }
 
@@ -56,6 +58,9 @@ const ConfirmEmail = () => {
         if (pendingUsers[confirmation.email]) {
           pendingUsers[confirmation.email].isVerified = true;
           localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
+          
+          console.log('User verified:', confirmation.email);
+          console.log('Updated pendingUsers:', pendingUsers);
         }
 
         // Remove the token
