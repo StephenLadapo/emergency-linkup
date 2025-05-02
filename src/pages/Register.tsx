@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '@/components/AuthForm';
@@ -8,9 +7,9 @@ import Logo from '@/components/Logo';
 import emailjs from 'emailjs-com';
 
 // EmailJS configuration
-const EMAILJS_SERVICE_ID = 'service_vtt07am'; // Replace with your actual service ID
-const EMAILJS_TEMPLATE_ID = 'template_4mgc5lf'; // Replace with your actual template ID
-const EMAILJS_USER_ID = 'ZA4pdVplYXQ8lSpQT'; // Replace with your actual user ID
+const EMAILJS_SERVICE_ID = 'service_fprjlcl'; // Updated with user's Service ID
+const EMAILJS_TEMPLATE_ID = 'template_gu18aiq'; // Updated with user's Template ID
+const EMAILJS_USER_ID = 'ZVJqFtna5EaBhHwj4'; // Updated with user's User ID
 
 const Register = () => {
   const [loading, setLoading] = useState(false);
