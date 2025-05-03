@@ -5,14 +5,8 @@ import AuthForm from '@/components/AuthForm';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Logo from '@/components/Logo';
-import emailjs from 'emailjs-com';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
-
-// EmailJS configuration
-const EMAILJS_SERVICE_ID = 'service_fprjlcl'; // Updated with user's Service ID
-const EMAILJS_TEMPLATE_ID = 'template_gu18aiq'; // Updated with user's Template ID
-const EMAILJS_USER_ID = 'ZVJqFtna5EaBhHwj4'; // Updated with user's User ID
 
 // Password requirements
 const PASSWORD_MIN_LENGTH = 8;
@@ -28,54 +22,6 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const navigate = useNavigate();
-
-  const generateConfirmationToken = (email: string): string => {
-    // In a real app, this would use a secure method to generate tokens
-    // For demonstration purposes, we're using a simple method
-    const timestamp = new Date().getTime();
-    const randomString = Math.random().toString(36).substring(2, 15);
-    return `${timestamp}-${randomString}-${email.replace('@', '-at-')}`;
-  };
-
-  const sendConfirmationEmail = async (email: string, fullName: string, token: string): Promise<boolean> => {
-    try {
-      // Generate the confirmation URL
-      const confirmationUrl = `${window.location.origin}/confirm-email?token=${token}`;
-      
-      // Prepare template parameters
-      const templateParams = {
-        to_name: fullName,
-        to_email: email,
-        confirmation_link: confirmationUrl,
-        from_name: 'University of Limpopo Emergency System'
-      };
-      
-      // Send email using EmailJS
-      const response = await emailjs.send(
-        EMAILJS_SERVICE_ID,
-        EMAILJS_TEMPLATE_ID,
-        templateParams,
-        EMAILJS_USER_ID
-      );
-      
-      console.log('Email successfully sent:', response);
-      
-      // Store the token and email in localStorage for demo purposes
-      // In a real app, this would be stored in a database
-      const pendingConfirmations = JSON.parse(localStorage.getItem('pendingConfirmations') || '{}');
-      pendingConfirmations[token] = {
-        email,
-        fullName,
-        createdAt: new Date().toISOString()
-      };
-      localStorage.setItem('pendingConfirmations', JSON.stringify(pendingConfirmations));
-      
-      return true;
-    } catch (error) {
-      console.error('Error sending confirmation email:', error);
-      return false;
-    }
-  };
 
   const validatePassword = (password: string): boolean => {
     // Check if password meets all requirements
@@ -115,44 +61,25 @@ const Register = () => {
     }
     
     try {
-      // In a real app, this would connect to an authentication service
-      console.log('Registration with:', { email, fullName, studentNumber });
+      // Store user directly without verification step
+      const users = JSON.parse(localStorage.getItem('users') || '{}');
+      users[email] = {
+        name: fullName,
+        email,
+        studentNumber,
+        password, // In a real app, this should be hashed
+        createdAt: new Date().toISOString(),
+        medicalInfo: {
+          bloodType: '',
+          allergies: '',
+          conditions: '',
+          medications: ''
+        },
+        emergencyContacts: []
+      };
       
-      // Generate confirmation token
-      const token = generateConfirmationToken(email);
-      
-      // Send confirmation email if name is provided
-      if (fullName) {
-        const emailSent = await sendConfirmationEmail(email, fullName, token);
-        
-        if (emailSent) {
-          // Store the user data in temporary storage
-          const pendingUsers = JSON.parse(localStorage.getItem('pendingUsers') || '{}');
-          pendingUsers[email] = {
-            name: fullName,
-            email,
-            studentNumber,
-            password, // In a real app, never store plain text passwords!
-            createdAt: new Date().toISOString(),
-            isVerified: false,
-            medicalInfo: {
-              bloodType: '',
-              allergies: '',
-              conditions: '',
-              medications: ''
-            },
-            emergencyContacts: []
-          };
-          localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
-          
-          toast.success('Registration successful! Please check your email for a confirmation link.');
-        } else {
-          toast.error('Registration successful, but confirmation email could not be sent. Please try again.');
-        }
-      } else {
-        toast.success('Registration successful! Please log in.');
-      }
-      
+      localStorage.setItem('users', JSON.stringify(users));
+      toast.success('Registration successful! Please log in.');
       navigate('/login');
     } catch (error) {
       console.error('Registration error:', error);
