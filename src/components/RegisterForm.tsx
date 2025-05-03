@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import AuthForm from '@/components/AuthForm';
@@ -8,6 +9,11 @@ import { useRegistration, PASSWORD_REQUIREMENTS } from '@/hooks/useRegistration'
 
 const RegisterForm = () => {
   const { loading, passwordError, handleRegister } = useRegistration();
+  const [password, setPassword] = useState('');
+
+  const handlePasswordChange = (newPassword: string) => {
+    setPassword(newPassword);
+  };
 
   return (
     <div className="z-10 w-full max-w-md">
@@ -20,13 +26,14 @@ const RegisterForm = () => {
           </p>
         </div>
         
-        <PasswordRequirements requirements={PASSWORD_REQUIREMENTS} password="" />
+        <PasswordRequirements requirements={PASSWORD_REQUIREMENTS} password={password} />
         
         <AuthForm 
           mode="register" 
           onSubmit={handleRegister} 
           showConfirmPassword={true} 
           passwordRequirements={PASSWORD_REQUIREMENTS} 
+          onPasswordChange={handlePasswordChange}
         />
         
         {passwordError && (

@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import emailjs from 'emailjs-com';
+import { v4 as uuidv4 } from 'uuid';
 
 // Password requirements constants
 export const PASSWORD_MIN_LENGTH = 8;
@@ -12,6 +14,11 @@ export const PASSWORD_REQUIREMENTS = [
   { check: (p: string) => /[0-9]/.test(p), text: "At least one number" },
   { check: (p: string) => /[^A-Za-z0-9]/.test(p), text: "At least one special character" }
 ];
+
+// EmailJS configuration
+const EMAILJS_SERVICE_ID = "service_fprjlcl";
+const EMAILJS_TEMPLATE_ID = "template_gu18aiq";
+const EMAILJS_USER_ID = "ZVJqFtna5EaBhHwj4";
 
 export const useRegistration = () => {
   const [loading, setLoading] = useState(false);
@@ -29,6 +36,32 @@ export const useRegistration = () => {
     
     setPasswordError(null);
     return true;
+  };
+
+  const sendConfirmationEmail = async (email: string, fullName: string, token: string) => {
+    try {
+      const confirmationLink = `${window.location.origin}/confirm-email?token=${token}`;
+      
+      const templateParams = {
+        to_name: fullName,
+        to_email: email,
+        confirmation_link: confirmationLink,
+        from_name: "University of Limpopo Emergency System"
+      };
+
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        templateParams,
+        EMAILJS_USER_ID
+      );
+
+      console.log("Confirmation email sent to:", email);
+      return true;
+    } catch (error) {
+      console.error("Failed to send confirmation email:", error);
+      return false;
+    }
   };
 
   const handleRegister = async (email: string, password: string, fullName?: string, studentNumber?: string, confirmPassword?: string) => {
@@ -56,14 +89,18 @@ export const useRegistration = () => {
     }
     
     try {
-      // Store user directly without verification step
-      const users = JSON.parse(localStorage.getItem('users') || '{}');
-      users[email] = {
+      // Generate confirmation token (UUID)
+      const confirmationToken = uuidv4();
+      
+      // Store pending user in localStorage
+      const pendingUsers = JSON.parse(localStorage.getItem('pendingUsers') || '{}');
+      pendingUsers[email] = {
         name: fullName,
         email,
         studentNumber,
         password, // In a real app, this should be hashed
         createdAt: new Date().toISOString(),
+        isVerified: false,
         medicalInfo: {
           bloodType: '',
           allergies: '',
@@ -72,9 +109,26 @@ export const useRegistration = () => {
         },
         emergencyContacts: []
       };
+      localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
       
-      localStorage.setItem('users', JSON.stringify(users));
-      toast.success('Registration successful! Please log in.');
+      // Store confirmation token
+      const pendingConfirmations = JSON.parse(localStorage.getItem('pendingConfirmations') || '{}');
+      pendingConfirmations[confirmationToken] = {
+        email,
+        fullName,
+        createdAt: new Date().toISOString()
+      };
+      localStorage.setItem('pendingConfirmations', JSON.stringify(pendingConfirmations));
+      
+      // Send confirmation email
+      const emailSent = await sendConfirmationEmail(email, fullName || '', confirmationToken);
+      
+      if (emailSent) {
+        toast.success('Registration successful! Please check your email to verify your account.');
+      } else {
+        toast.warning('Account created but we could not send verification email. Please try to login and request a new verification email.');
+      }
+      
       navigate('/login');
     } catch (error) {
       console.error('Registration error:', error);

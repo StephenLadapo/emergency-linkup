@@ -59,8 +59,13 @@ const ConfirmEmail = () => {
           pendingUsers[confirmation.email].isVerified = true;
           localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
           
+          // Move verified user to users collection
+          const users = JSON.parse(localStorage.getItem('users') || '{}');
+          users[confirmation.email] = pendingUsers[confirmation.email];
+          localStorage.setItem('users', JSON.stringify(users));
+          
           console.log('User verified:', confirmation.email);
-          console.log('Updated pendingUsers:', pendingUsers);
+          console.log('Updated users:', users);
         }
 
         // Remove the token

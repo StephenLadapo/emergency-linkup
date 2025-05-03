@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 
@@ -17,9 +16,16 @@ interface AuthFormProps {
   onSubmit: (email: string, password: string, fullName?: string, studentNumber?: string, confirmPassword?: string) => void;
   showConfirmPassword?: boolean;
   passwordRequirements?: PasswordRequirement[];
+  onPasswordChange?: (password: string) => void;
 }
 
-const AuthForm = ({ mode, onSubmit, showConfirmPassword = false, passwordRequirements = [] }: AuthFormProps) => {
+const AuthForm = ({ 
+  mode, 
+  onSubmit, 
+  showConfirmPassword = false, 
+  passwordRequirements = [],
+  onPasswordChange
+}: AuthFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -27,7 +33,14 @@ const AuthForm = ({ mode, onSubmit, showConfirmPassword = false, passwordRequire
   const [studentNumber, setStudentNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPasswordField, setShowConfirmPasswordField] = useState(false);
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    if (onPasswordChange) {
+      onPasswordChange(newPassword);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,7 +124,7 @@ const AuthForm = ({ mode, onSubmit, showConfirmPassword = false, passwordRequire
             id="password"
             type={showPassword ? "text" : "password"}
             value={password} 
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
             className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-amber-200 dark:border-amber-900/30 pr-10"
             required
           />
@@ -123,22 +136,6 @@ const AuthForm = ({ mode, onSubmit, showConfirmPassword = false, passwordRequire
             {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
           </button>
         </div>
-        
-        {passwordRequirements.length > 0 && (
-          <div className="mt-2">
-            <p className="text-xs text-muted-foreground mb-1">Password must have:</p>
-            <ul className="text-xs space-y-1">
-              {passwordRequirements.map((req, index) => (
-                <li key={index} className={`flex items-center gap-1 ${req.check(password) ? 'text-green-600' : 'text-gray-500'}`}>
-                  <span className={`text-xs ${req.check(password) ? 'text-green-600' : 'text-gray-500'}`}>
-                    {req.check(password) ? '✓' : '○'}
-                  </span>
-                  {req.text}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
       
       {showConfirmPassword && (
