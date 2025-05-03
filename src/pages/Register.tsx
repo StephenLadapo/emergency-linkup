@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '@/components/AuthForm';
@@ -7,6 +6,9 @@ import { toast } from 'sonner';
 import Logo from '@/components/Logo';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
+import emailjs from 'emailjs-com';
+
+
 
 // Password requirements
 const PASSWORD_MIN_LENGTH = 8;
@@ -36,58 +38,70 @@ const Register = () => {
     return true;
   };
 
-  const handleRegister = async (email: string, password: string, fullName?: string, studentNumber?: string, confirmPassword?: string) => {
-    setLoading(true);
+const handleRegister = async (email: string, password: string, fullName?: string, studentNumber?: string, confirmPassword?: string) => {
+  setLoading(true);
+
+  if (password !== confirmPassword) {
+    toast.error('Passwords do not match');
+    setLoading(false);
+    return;
+  }
+
+  if (!validatePassword(password)) {
+    toast.error('Password does not meet security requirements');
+    setLoading(false);
+    return;
+  }
+
+  if (!email.endsWith('@keyaka.ul.ac.za')) {
+    toast.error('Please use your University of Limpopo email address (@keyaka.ul.ac.za)');
+    setLoading(false);
+    return;
+  }
+
+  try {
+    const users = JSON.parse(localStorage.getItem('users') || '{}');
+    users[email] = {
+      name: fullName,
+      email,
+      studentNumber,
+      password,
+      createdAt: new Date().toISOString(),
+      medicalInfo: {
+        bloodType: '',
+        allergies: '',
+        conditions: '',
+        medications: ''
+      },
+      emergencyContacts: []
+    };
     
-    // Check if passwords match
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
-      setLoading(false);
-      return;
-    }
-    
-    // Validate password strength
-    if (!validatePassword(password)) {
-      toast.error('Password does not meet security requirements');
-      setLoading(false);
-      return;
-    }
-    
-    // Check if email is from keyaka domain
-    if (!email.endsWith('@keyaka.ul.ac.za')) {
-      toast.error('Please use your University of Limpopo email address (@keyaka.ul.ac.za)');
-      setLoading(false);
-      return;
-    }
-    
-    try {
-      // Store user directly without verification step
-      const users = JSON.parse(localStorage.getItem('users') || '{}');
-      users[email] = {
-        name: fullName,
-        email,
-        studentNumber,
-        password, // In a real app, this should be hashed
-        createdAt: new Date().toISOString(),
-        medicalInfo: {
-          bloodType: '',
-          allergies: '',
-          conditions: '',
-          medications: ''
-        },
-        emergencyContacts: []
-      };
-      
-      localStorage.setItem('users', JSON.stringify(users));
-      toast.success('Registration successful! Please log in.');
-      navigate('/login');
-    } catch (error) {
-      console.error('Registration error:', error);
-      toast.error('Registration failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    localStorage.setItem('users', JSON.stringify(users));
+
+    //Send confirmation email
+    const emailParams = {
+      to_email: email,
+      to_name: fullName || 'User',
+      student_number: studentNumber || 'N/A'
+    };
+
+    await emailjs.send(
+      'service_fprjlcl',
+      'template_gu18aiq',
+      emailParams,
+      'ZVJqFtna5EaBhHwj4'
+    );
+
+    toast.success('Registration successful! Confirmation email sent. Please log in.');
+    navigate('/login');
+  } catch (error) {
+    console.error('Registration error:', error);
+    toast.error('Registration failed. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
