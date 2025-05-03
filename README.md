@@ -1,69 +1,54 @@
-# Welcome to your Lovable project
 
-## Project info
+# EmergencyLinkUp - University of Limpopo
 
-**URL**: https://lovable.dev/projects/956b9256-554f-442e-ba40-10015872a126
+An emergency response system developed for the University of Limpopo to improve campus safety and emergency response times.
 
-## How can I edit this code?
+## Project Overview
 
-There are several ways of editing your application.
+EmergencyLinkUp is designed to provide students and staff at the University of Limpopo with a reliable and efficient emergency response system. The application allows users to quickly report emergencies, share their location with campus security, and get immediate assistance when needed.
 
-**Use Lovable**
+## Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/956b9256-554f-442e-ba40-10015872a126) and start prompting.
+- **One-Click Emergency Alerts**: Quickly send emergency alerts to campus security
+- **Location Tracking**: Share your location during emergencies
+- **Audio Recognition**: System can recognize emergency sounds and respond accordingly
+- **User Profiles**: Store important medical information and emergency contacts
+- **Message Center**: Communicate with emergency responders
+- **History Tracking**: Keep track of past emergency incidents
 
-Changes made via Lovable will be committed automatically to this repo.
+## Technologies Used
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
+This project is built with:
 
 - Vite
 - TypeScript
 - React
-- shadcn-ui
 - Tailwind CSS
+- React Query
 
-## How can I deploy this project?
+## How to Run Locally
 
-Simply open [Lovable](https://lovable.dev/projects/956b9256-554f-442e-ba40-10015872a126) and click on Share -> Publish.
+```sh
+# Clone the repository
+git clone [your-repo-url]
 
-## I want to use a custom domain - is that possible?
+# Navigate to the project directory
+cd emergency-linkup
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
+```
+
+## Project Structure
+
+- `/src/components`: Reusable UI components
+- `/src/pages`: Application pages and routes
+- `/src/hooks`: Custom React hooks
+- `/src/lib`: Utility functions and helpers
+
+## Developed By
+
+Computer Science students at the University of Limpopo, 2025.

@@ -14,47 +14,27 @@ const Login = () => {
     setLoading(true);
     
     try {
-      // In a real app, this would connect to an authentication service
-      console.log('Login attempt with:', { email });
-      
-      // Check if the user exists in our pendingUsers (for email verification)
-      const pendingUsers = JSON.parse(localStorage.getItem('pendingUsers') || '{}');
-      const user = pendingUsers[email];
-      
-      if (user && !user.isVerified) {
-        toast.error('Please verify your email before logging in.');
-        setLoading(false);
-        return;
-      }
+      // Check if the user exists in our users storage
+      const users = JSON.parse(localStorage.getItem('users') || '{}');
+      const user = users[email];
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // For demo, check if user exists in pendingUsers and is verified
-      if (user && user.isVerified && user.password === password) {
-        // Create a verified user in localStorage
+      if (user && user.password === password) {
+        // Create a logged in user in localStorage
         localStorage.setItem('user', JSON.stringify({
           name: user.name,
           email,
-          studentNumber: user.studentNumber,
-          photoUrl: '',
-          isVerified: true
+          studentNumber: user.studentNumber
         }));
         
         toast.success('Login successful!');
         navigate('/dashboard/profile');
         return;
+      } else {
+        throw new Error('Invalid credentials');
       }
-      
-      // Mock successful login for non-verified flow (for backward compatibility)
-      localStorage.setItem('user', JSON.stringify({
-        name: 'Test Student',
-        email,
-        photoUrl: '',
-      }));
-      
-      toast.success('Login successful!');
-      navigate('/dashboard/profile');
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Login failed. Please check your credentials.');
