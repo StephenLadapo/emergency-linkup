@@ -8,8 +8,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 const Map = () => {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const marker = useRef<mapboxgl.Marker | null>(null);
+  const [mapboxToken, setMapboxToken] = useState<string>('');
+  const [showMapTokenDialog, setShowMapTokenDialog] = useState(false);
+  
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const [accuracy, setAccuracy] = useState<number | null>(null);
@@ -21,6 +29,7 @@ const Map = () => {
   const [emergencyDetails, setEmergencyDetails] = useState('');
   const [emergencySent, setEmergencySent] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [mapInitialized, setMapInitialized] = useState(false);
 
   // Function to add events to user history
   const addToHistory = (type: string, description: string, status?: string) => {
@@ -44,16 +53,73 @@ const Map = () => {
     }
   };
 
+  // Try to retrieve the Mapbox token from localStorage on component mount
   useEffect(() => {
-    startLocationTracking();
+    const savedToken = localStorage.getItem('mapboxToken');
+    if (savedToken) {
+      setMapboxToken(savedToken);
+    } else {
+      setShowMapTokenDialog(true);
+    }
+  }, []);
+
+  // Handle submitting the Mapbox token
+  const handleTokenSubmit = () => {
+    if (mapboxToken) {
+      localStorage.setItem('mapboxToken', mapboxToken);
+      setShowMapTokenDialog(false);
+      startLocationTracking();
+    } else {
+      toast.error('Please enter a valid Mapbox token');
+    }
+  };
+
+  // Initialize/update map when location or token changes
+  useEffect(() => {
+    if (!mapboxToken || !location || !mapContainer.current) return;
+    
+    if (!mapInitialized) {
+      mapboxgl.accessToken = mapboxToken;
+    
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: [location.lng, location.lat],
+        zoom: 15
+      });
+
+      // Add navigation controls
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      // Create a marker for the user's location
+      marker.current = new mapboxgl.Marker({ color: '#FF0000' })
+        .setLngLat([location.lng, location.lat])
+        .addTo(map.current);
+
+      setMapInitialized(true);
+    } else if (map.current && marker.current) {
+      // Update marker position and map center
+      marker.current.setLngLat([location.lng, location.lat]);
+      map.current.setCenter([location.lng, location.lat]);
+    }
+  }, [location, mapboxToken, mapInitialized]);
+
+  useEffect(() => {
+    if (mapboxToken) {
+      startLocationTracking();
+    }
     
     return () => {
       // Clean up
       if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
       }
+      
+      if (map.current) {
+        map.current.remove();
+      }
     };
-  }, []);
+  }, [mapboxToken]);
   
   const startLocationTracking = () => {
     if (navigator.geolocation) {
@@ -134,13 +200,27 @@ const Map = () => {
     }
   };
 
-  // Mock function to fetch address from coordinates (would use a real geocoding service in production)
+  // Fetch address from coordinates (now it will use a more realistic approach, though still mocked)
   const fetchAddress = async (location: {lat: number, lng: number}) => {
     try {
-      // This would be a call to a geocoding API like Google Maps, Mapbox, etc.
-      // For now, we'll simulate it with a mock address
+      // In a real app, this would use the Mapbox Geocoding API
+      // For now, we'll simulate it with a mock address based on coordinates
       setTimeout(() => {
-        setAddress("University of Limpopo, Sovenga, Polokwane");
+        // Mocking different locations based on coordinates to make it more realistic
+        const addresses = [
+          "University of Limpopo, Sovenga, Polokwane",
+          "Student Residence, University of Limpopo",
+          "Science Building, University of Limpopo Campus",
+          "Library Complex, University of Limpopo",
+          "Sports Field, University of Limpopo"
+        ];
+        
+        // Generate a pseudo-random index based on coordinates
+        const index = Math.floor(
+          ((location.lat * 10 + location.lng * 10) % 5 + 5) % 5
+        );
+        
+        setAddress(addresses[index]);
       }, 500);
     } catch (err) {
       console.error('Error fetching address:', err);
@@ -235,6 +315,41 @@ const Map = () => {
   return (
     <Card className="h-full">
       <CardContent className="p-4 flex flex-col items-center justify-center h-full">
+        {/* MapBox Token Input Dialog */}
+        <Dialog open={showMapTokenDialog} onOpenChange={setShowMapTokenDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Enter Mapbox Access Token</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label htmlFor="mapboxToken">Mapbox Access Token</Label>
+                <Input 
+                  id="mapboxToken"
+                  placeholder="Enter your Mapbox public token"
+                  value={mapboxToken}
+                  onChange={(e) => setMapboxToken(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  You can find your public token at 
+                  <a href="https://mapbox.com/" target="_blank" rel="noopener noreferrer" className="text-primary ml-1">
+                    mapbox.com
+                  </a>
+                </p>
+              </div>
+              
+              <div className="pt-2">
+                <Button 
+                  onClick={handleTokenSubmit} 
+                  className="w-full"
+                >
+                  Save Token
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {loading ? (
           <div className="flex flex-col items-center justify-center space-y-2">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -265,9 +380,21 @@ const Map = () => {
               </div>
             )}
             
+            {/* Map container */}
+            <div className="w-full h-64 rounded-md overflow-hidden border">
+              {mapboxToken ? (
+                <div ref={mapContainer} className="w-full h-full" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-muted/20">
+                  <Button onClick={() => setShowMapTokenDialog(true)}>
+                    Set Mapbox Token to Display Map
+                  </Button>
+                </div>
+              )}
+            </div>
+            
             <div className="text-center text-sm text-muted-foreground">
-              <p>For a real implementation, this would show a map.</p>
-              <p className="mt-2">Current coordinates:</p>
+              <p>Current coordinates:</p>
               <p className="font-mono mt-1">
                 {location?.lat.toFixed(6)}, {location?.lng.toFixed(6)}
               </p>
