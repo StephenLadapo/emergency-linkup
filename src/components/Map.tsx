@@ -10,21 +10,17 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
 const Map = () => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [watchId, setWatchId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [continuousTracking, setContinuousTracking] = useState(false);
   const [showEmergencyDialog, setShowEmergencyDialog] = useState(false);
   const [emergencyDetails, setEmergencyDetails] = useState('');
   const [emergencySent, setEmergencySent] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-  const [consentGiven, setConsentGiven] = useState<boolean | null>(null);
-  const [showConsentDialog, setShowConsentDialog] = useState(false);
 
   // Function to add events to user history
   const addToHistory = (type: string, description: string, status?: string) => {
@@ -48,43 +44,8 @@ const Map = () => {
     }
   };
 
-  // Check for previously saved consent
   useEffect(() => {
-    const savedConsent = localStorage.getItem('locationConsentGiven');
-    if (savedConsent !== null) {
-      const consentValue = savedConsent === 'true';
-      setConsentGiven(consentValue);
-      
-      if (consentValue) {
-        startLocationTracking();
-      }
-    } else {
-      // Show consent dialog only if consent hasn't been given before
-      setShowConsentDialog(true);
-    }
-  }, []);
-
-  // Handle consent decision
-  const handleConsentDecision = (consent: boolean) => {
-    setConsentGiven(consent);
-    localStorage.setItem('locationConsentGiven', String(consent));
-    setShowConsentDialog(false);
-    
-    if (consent) {
-      startLocationTracking();
-      addToHistory('consent', 'Location tracking consent given');
-      toast.success('Location tracking enabled');
-    } else {
-      addToHistory('consent', 'Location tracking consent denied');
-      toast.info('Location tracking disabled');
-    }
-  };
-
-  // Initialize/cleanup location tracking
-  useEffect(() => {
-    if (consentGiven) {
-      startLocationTracking();
-    }
+    startLocationTracking();
     
     return () => {
       // Clean up
@@ -92,13 +53,9 @@ const Map = () => {
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [consentGiven]);
+  }, []);
   
   const startLocationTracking = () => {
-    if (!consentGiven) return;
-    
-    setLoading(true);
-    
     if (navigator.geolocation) {
       // Get initial location
       navigator.geolocation.getCurrentPosition(
@@ -177,27 +134,13 @@ const Map = () => {
     }
   };
 
-  // Fetch address from coordinates (now it will use a more realistic approach, though still mocked)
+  // Mock function to fetch address from coordinates (would use a real geocoding service in production)
   const fetchAddress = async (location: {lat: number, lng: number}) => {
     try {
-      // In a real app, this would use the Geocoding API
-      // For now, we'll simulate it with a mock address based on coordinates
+      // This would be a call to a geocoding API like Google Maps, Mapbox, etc.
+      // For now, we'll simulate it with a mock address
       setTimeout(() => {
-        // Mocking different locations based on coordinates to make it more realistic
-        const addresses = [
-          "University of Limpopo, Sovenga, Polokwane",
-          "Student Residence, University of Limpopo",
-          "Science Building, University of Limpopo Campus",
-          "Library Complex, University of Limpopo",
-          "Sports Field, University of Limpopo"
-        ];
-        
-        // Generate a pseudo-random index based on coordinates
-        const index = Math.floor(
-          ((location.lat * 10 + location.lng * 10) % 5 + 5) % 5
-        );
-        
-        setAddress(addresses[index]);
+        setAddress("University of Limpopo, Sovenga, Polokwane");
       }, 500);
     } catch (err) {
       console.error('Error fetching address:', err);
@@ -289,103 +232,10 @@ const Map = () => {
     }
   };
   
-  // Show consent dialog if consent hasn't been given yet
-  if (consentGiven === null) {
-    return (
-      <Dialog open={showConsentDialog} onOpenChange={setShowConsentDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Location Tracking Permission</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p>EmergencyLinkUp needs your location to provide emergency services. Would you like to enable location tracking?</p>
-            <p className="text-sm text-muted-foreground">You can change this setting later in your profile.</p>
-            <img 
-              src="/student-uploads/campus-map.jpg" 
-              alt="University of Limpopo Campus Map" 
-              className="w-full h-auto rounded-md border"
-            />
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={() => handleConsentDecision(false)}>
-                Deny
-              </Button>
-              <Button onClick={() => handleConsentDecision(true)}>
-                Allow
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-  
   return (
     <Card className="h-full">
       <CardContent className="p-4 flex flex-col items-center justify-center h-full">
-        {/* Emergency Dialog */}
-        <Dialog open={showEmergencyDialog} onOpenChange={setShowEmergencyDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                Send Emergency Location
-              </DialogTitle>
-            </DialogHeader>
-            
-            {!emergencySent ? (
-              <div className="space-y-4 py-2">
-                <div className="space-y-2">
-                  <Label htmlFor="emergencyDetails">Emergency Details (Optional)</Label>
-                  <Input 
-                    id="emergencyDetails"
-                    placeholder="Briefly describe your emergency situation"
-                    value={emergencyDetails}
-                    onChange={(e) => setEmergencyDetails(e.target.value)}
-                  />
-                </div>
-                
-                <div className="pt-2">
-                  <Button 
-                    onClick={sendEmergencyLocation} 
-                    className="w-full"
-                  >
-                    <Shield className="mr-2 h-4 w-4" />
-                    Send Emergency Location
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="py-6 text-center">
-                <div className="flex items-center justify-center mb-4">
-                  <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                    <Shield className="h-6 w-6 text-green-600" />
-                  </div>
-                </div>
-                <p className="font-medium text-green-700">
-                  Emergency location successfully sent!
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Campus security has been notified.
-                </p>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {!consentGiven ? (
-          <div className="text-center space-y-4">
-            <div className="rounded-full bg-amber-100 p-4 w-16 h-16 mx-auto flex items-center justify-center">
-              <MapPin className="h-8 w-8 text-amber-600" />
-            </div>
-            <h3 className="text-lg font-medium">Location Tracking Disabled</h3>
-            <p className="text-muted-foreground">
-              You've chosen to disable location tracking. Your location will not be shared with emergency services.
-            </p>
-            <Button variant="outline" onClick={() => handleConsentDecision(true)}>
-              Enable Location Tracking
-            </Button>
-          </div>
-        ) : loading ? (
+        {loading ? (
           <div className="flex flex-col items-center justify-center space-y-2">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             <p className="text-sm text-muted-foreground">Getting your location...</p>
@@ -415,33 +265,9 @@ const Map = () => {
               </div>
             )}
             
-            {/* Location display area */}
-            <div className="w-full h-64 rounded-md overflow-hidden border relative">
-              <div className="w-full h-full flex items-center justify-center bg-muted/20">
-                <div className="text-center p-4">
-                  <div className="animate-pulse mb-2">
-                    <MapPin className="h-8 w-8 text-primary mx-auto" />
-                  </div>
-                  {location ? (
-                    <p className="font-medium">
-                      Location Active
-                    </p>
-                  ) : (
-                    <p className="text-muted-foreground">
-                      Waiting for location...
-                    </p>
-                  )}
-                </div>
-              </div>
-              <img 
-                src="/student-uploads/campus-map.jpg" 
-                alt="University of Limpopo Campus Map" 
-                className="absolute inset-0 w-full h-full object-cover opacity-20 z-0"
-              />
-            </div>
-            
             <div className="text-center text-sm text-muted-foreground">
-              <p>Current coordinates:</p>
+              <p>For a real implementation, this would show a map.</p>
+              <p className="mt-2">Current coordinates:</p>
               <p className="font-mono mt-1">
                 {location?.lat.toFixed(6)}, {location?.lng.toFixed(6)}
               </p>
@@ -452,7 +278,6 @@ const Map = () => {
                 onClick={shareLocation} 
                 variant="outline" 
                 className="flex gap-2"
-                disabled={!location}
               >
                 <Share2 className="h-4 w-4" />
                 Share Location
@@ -462,22 +287,65 @@ const Map = () => {
                 onClick={shareWithEmergencyContacts} 
                 variant="outline" 
                 className="flex gap-2"
-                disabled={!location}
               >
                 <UserPlus className="h-4 w-4" />
                 Share with Emergency Contacts
               </Button>
               
-              <DialogTrigger asChild>
-                <Button 
-                  variant="destructive" 
-                  className="flex gap-2" 
-                  disabled={!location}
-                >
-                  <AlertTriangle className="h-4 w-4" />
-                  Send Location to Campus Security
-                </Button>
-              </DialogTrigger>
+              <Dialog open={showEmergencyDialog} onOpenChange={setShowEmergencyDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="destructive" className="flex gap-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    Send Location to Campus Security
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Send Emergency Location
+                    </DialogTitle>
+                  </DialogHeader>
+                  
+                  {!emergencySent ? (
+                    <div className="space-y-4 py-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="emergencyDetails">Emergency Details (Optional)</Label>
+                        <Input 
+                          id="emergencyDetails"
+                          placeholder="Briefly describe your emergency situation"
+                          value={emergencyDetails}
+                          onChange={(e) => setEmergencyDetails(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div className="pt-2">
+                        <Button 
+                          onClick={sendEmergencyLocation} 
+                          className="w-full"
+                        >
+                          <Shield className="mr-2 h-4 w-4" />
+                          Send Emergency Location
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="py-6 text-center">
+                      <div className="flex items-center justify-center mb-4">
+                        <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                          <Shield className="h-6 w-6 text-green-600" />
+                        </div>
+                      </div>
+                      <p className="font-medium text-green-700">
+                        Emergency location successfully sent!
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Campus security has been notified.
+                      </p>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
             </div>
             
             <div className="flex items-center space-x-2 mt-4">
@@ -495,24 +363,6 @@ const Map = () => {
               ) : (
                 <span>Enable continuous tracking for real-time location updates</span>
               )}
-            </div>
-          </div>
-        )}
-        
-        {/* Location Consent Controls at Bottom */}
-        {consentGiven !== null && (
-          <div className="mt-6 pt-4 border-t w-full">
-            <div className="flex justify-between items-center">
-              <p className="text-sm text-muted-foreground">
-                Location Tracking:
-              </p>
-              <Button 
-                variant={consentGiven ? "outline" : "default"} 
-                size="sm"
-                onClick={() => handleConsentDecision(!consentGiven)}
-              >
-                {consentGiven ? "Disable" : "Enable"}
-              </Button>
             </div>
           </div>
         )}

@@ -17,15 +17,15 @@ interface AuthFormProps {
   onSubmit: (email: string, password: string, fullName?: string, studentNumber?: string, confirmPassword?: string) => void;
   showConfirmPassword?: boolean;
   passwordRequirements?: PasswordRequirement[];
-  loading?: boolean;
 }
 
-const AuthForm = ({ mode, onSubmit, showConfirmPassword = false, passwordRequirements = [], loading = false }: AuthFormProps) => {
+const AuthForm = ({ mode, onSubmit, showConfirmPassword = false, passwordRequirements = [] }: AuthFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [studentNumber, setStudentNumber] = useState('');
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPasswordField, setShowConfirmPasswordField] = useState(false);
 
@@ -41,6 +41,7 @@ const AuthForm = ({ mode, onSubmit, showConfirmPassword = false, passwordRequire
       return;
     }
     
+    setLoading(true);
     try {
       onSubmit(
         email, 
@@ -52,6 +53,8 @@ const AuthForm = ({ mode, onSubmit, showConfirmPassword = false, passwordRequire
     } catch (error) {
       console.error('Auth error:', error);
       toast.error('Authentication failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
