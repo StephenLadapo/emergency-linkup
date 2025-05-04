@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import Logo from '@/components/Logo';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
+import emailjs from '@emailjs/browser';
 
 // Password requirements
 const PASSWORD_MIN_LENGTH = 8;
@@ -17,6 +18,9 @@ const PASSWORD_REQUIREMENTS = [
   { check: (p: string) => /[0-9]/.test(p), text: "At least one number" },
   { check: (p: string) => /[^A-Za-z0-9]/.test(p), text: "At least one special character" }
 ];
+
+// Initialize EmailJS with your user ID
+emailjs.init("ZVJqFtna5EaBhHwj4");
 
 const Register = () => {
   const [loading, setLoading] = useState(false);
@@ -37,8 +41,18 @@ const Register = () => {
 
   const sendConfirmationEmail = async (email: string, fullName: string) => {
     try {
-      // Simulate sending confirmation email
-      console.log('Sending confirmation email to:', email, fullName);
+      const templateParams = {
+        to_name: fullName,
+        to_email: email,
+        login_link: `${window.location.origin}/login`
+      };
+
+      await emailjs.send(
+        "service_fprjlcl",
+        "template_gu18aiq",
+        templateParams
+      );
+
       toast.success('Registration successful! A confirmation email has been sent.');
     } catch (error) {
       console.error('Failed to send confirmation email:', error);
@@ -97,9 +111,7 @@ const Register = () => {
       localStorage.setItem('users', JSON.stringify(users));
       
       // Send confirmation email (don't await so it doesn't block the UI)
-      if (fullName) {
-        sendConfirmationEmail(email, fullName);
-      }
+      sendConfirmationEmail(email, fullName || '');
       
       // Navigate to login after successful registration
       navigate('/login');
@@ -116,7 +128,7 @@ const Register = () => {
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-900/70 to-amber-700/70 mix-blend-multiply"></div>
         <img 
-          src="/student-uploads/campus-background.jpg" 
+          src="/ul-logo.png" 
           alt="University of Limpopo Campus" 
           className="w-full h-full object-cover"
         />
@@ -143,7 +155,7 @@ const Register = () => {
             mode="register" 
             onSubmit={handleRegister} 
             showConfirmPassword={true} 
-            passwordRequirements={PASSWORD_REQUIREMENTS}
+            passwordRequirements={PASSWORD_REQUIREMENTS} 
             loading={loading}
           />
           
