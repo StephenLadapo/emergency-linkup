@@ -8,28 +8,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
 
 const Map = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const marker = useRef<mapboxgl.Marker | null>(null);
-  const [mapboxToken, setMapboxToken] = useState<string>('');
-  const [showMapTokenDialog, setShowMapTokenDialog] = useState(false);
   
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [watchId, setWatchId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [continuousTracking, setContinuousTracking] = useState(false);
   const [showEmergencyDialog, setShowEmergencyDialog] = useState(false);
   const [emergencyDetails, setEmergencyDetails] = useState('');
   const [emergencySent, setEmergencySent] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-  const [mapInitialized, setMapInitialized] = useState(false);
+  const [consentGiven, setConsentGiven] = useState<boolean | null>(null);
+  const [showConsentDialog, setShowConsentDialog] = useState(false);
 
   // Function to add events to user history
   const addToHistory = (type: string, description: string, status?: string) => {
@@ -53,59 +48,41 @@ const Map = () => {
     }
   };
 
-  // Try to retrieve the Mapbox token from localStorage on component mount
+  // Check for previously saved consent
   useEffect(() => {
-    const savedToken = localStorage.getItem('mapboxToken');
-    if (savedToken) {
-      setMapboxToken(savedToken);
+    const savedConsent = localStorage.getItem('locationConsentGiven');
+    if (savedConsent !== null) {
+      const consentValue = savedConsent === 'true';
+      setConsentGiven(consentValue);
+      
+      if (consentValue) {
+        startLocationTracking();
+      }
     } else {
-      setShowMapTokenDialog(true);
+      // Show consent dialog only if consent hasn't been given before
+      setShowConsentDialog(true);
     }
   }, []);
 
-  // Handle submitting the Mapbox token
-  const handleTokenSubmit = () => {
-    if (mapboxToken) {
-      localStorage.setItem('mapboxToken', mapboxToken);
-      setShowMapTokenDialog(false);
+  // Handle consent decision
+  const handleConsentDecision = (consent: boolean) => {
+    setConsentGiven(consent);
+    localStorage.setItem('locationConsentGiven', String(consent));
+    setShowConsentDialog(false);
+    
+    if (consent) {
       startLocationTracking();
+      addToHistory('consent', 'Location tracking consent given');
+      toast.success('Location tracking enabled');
     } else {
-      toast.error('Please enter a valid Mapbox token');
+      addToHistory('consent', 'Location tracking consent denied');
+      toast.info('Location tracking disabled');
     }
   };
 
-  // Initialize/update map when location or token changes
+  // Initialize/cleanup location tracking
   useEffect(() => {
-    if (!mapboxToken || !location || !mapContainer.current) return;
-    
-    if (!mapInitialized) {
-      mapboxgl.accessToken = mapboxToken;
-    
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: [location.lng, location.lat],
-        zoom: 15
-      });
-
-      // Add navigation controls
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
-      // Create a marker for the user's location
-      marker.current = new mapboxgl.Marker({ color: '#FF0000' })
-        .setLngLat([location.lng, location.lat])
-        .addTo(map.current);
-
-      setMapInitialized(true);
-    } else if (map.current && marker.current) {
-      // Update marker position and map center
-      marker.current.setLngLat([location.lng, location.lat]);
-      map.current.setCenter([location.lng, location.lat]);
-    }
-  }, [location, mapboxToken, mapInitialized]);
-
-  useEffect(() => {
-    if (mapboxToken) {
+    if (consentGiven) {
       startLocationTracking();
     }
     
@@ -114,14 +91,14 @@ const Map = () => {
       if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
       }
-      
-      if (map.current) {
-        map.current.remove();
-      }
     };
-  }, [mapboxToken]);
+  }, [consentGiven]);
   
   const startLocationTracking = () => {
+    if (!consentGiven) return;
+    
+    setLoading(true);
+    
     if (navigator.geolocation) {
       // Get initial location
       navigator.geolocation.getCurrentPosition(
@@ -203,7 +180,7 @@ const Map = () => {
   // Fetch address from coordinates (now it will use a more realistic approach, though still mocked)
   const fetchAddress = async (location: {lat: number, lng: number}) => {
     try {
-      // In a real app, this would use the Mapbox Geocoding API
+      // In a real app, this would use the Geocoding API
       // For now, we'll simulate it with a mock address based on coordinates
       setTimeout(() => {
         // Mocking different locations based on coordinates to make it more realistic
@@ -312,45 +289,103 @@ const Map = () => {
     }
   };
   
+  // Show consent dialog if consent hasn't been given yet
+  if (consentGiven === null) {
+    return (
+      <Dialog open={showConsentDialog} onOpenChange={setShowConsentDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Location Tracking Permission</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p>EmergencyLinkUp needs your location to provide emergency services. Would you like to enable location tracking?</p>
+            <p className="text-sm text-muted-foreground">You can change this setting later in your profile.</p>
+            <img 
+              src="/student-uploads/campus-map.jpg" 
+              alt="University of Limpopo Campus Map" 
+              className="w-full h-auto rounded-md border"
+            />
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => handleConsentDecision(false)}>
+                Deny
+              </Button>
+              <Button onClick={() => handleConsentDecision(true)}>
+                Allow
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+  
   return (
     <Card className="h-full">
       <CardContent className="p-4 flex flex-col items-center justify-center h-full">
-        {/* MapBox Token Input Dialog */}
-        <Dialog open={showMapTokenDialog} onOpenChange={setShowMapTokenDialog}>
+        {/* Emergency Dialog */}
+        <Dialog open={showEmergencyDialog} onOpenChange={setShowEmergencyDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Enter Mapbox Access Token</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Send Emergency Location
+              </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-2">
-              <div className="space-y-2">
-                <Label htmlFor="mapboxToken">Mapbox Access Token</Label>
-                <Input 
-                  id="mapboxToken"
-                  placeholder="Enter your Mapbox public token"
-                  value={mapboxToken}
-                  onChange={(e) => setMapboxToken(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  You can find your public token at 
-                  <a href="https://mapbox.com/" target="_blank" rel="noopener noreferrer" className="text-primary ml-1">
-                    mapbox.com
-                  </a>
+            
+            {!emergencySent ? (
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label htmlFor="emergencyDetails">Emergency Details (Optional)</Label>
+                  <Input 
+                    id="emergencyDetails"
+                    placeholder="Briefly describe your emergency situation"
+                    value={emergencyDetails}
+                    onChange={(e) => setEmergencyDetails(e.target.value)}
+                  />
+                </div>
+                
+                <div className="pt-2">
+                  <Button 
+                    onClick={sendEmergencyLocation} 
+                    className="w-full"
+                  >
+                    <Shield className="mr-2 h-4 w-4" />
+                    Send Emergency Location
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="py-6 text-center">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                    <Shield className="h-6 w-6 text-green-600" />
+                  </div>
+                </div>
+                <p className="font-medium text-green-700">
+                  Emergency location successfully sent!
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Campus security has been notified.
                 </p>
               </div>
-              
-              <div className="pt-2">
-                <Button 
-                  onClick={handleTokenSubmit} 
-                  className="w-full"
-                >
-                  Save Token
-                </Button>
-              </div>
-            </div>
+            )}
           </DialogContent>
         </Dialog>
 
-        {loading ? (
+        {!consentGiven ? (
+          <div className="text-center space-y-4">
+            <div className="rounded-full bg-amber-100 p-4 w-16 h-16 mx-auto flex items-center justify-center">
+              <MapPin className="h-8 w-8 text-amber-600" />
+            </div>
+            <h3 className="text-lg font-medium">Location Tracking Disabled</h3>
+            <p className="text-muted-foreground">
+              You've chosen to disable location tracking. Your location will not be shared with emergency services.
+            </p>
+            <Button variant="outline" onClick={() => handleConsentDecision(true)}>
+              Enable Location Tracking
+            </Button>
+          </div>
+        ) : loading ? (
           <div className="flex flex-col items-center justify-center space-y-2">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             <p className="text-sm text-muted-foreground">Getting your location...</p>
@@ -380,17 +415,29 @@ const Map = () => {
               </div>
             )}
             
-            {/* Map container */}
-            <div className="w-full h-64 rounded-md overflow-hidden border">
-              {mapboxToken ? (
-                <div ref={mapContainer} className="w-full h-full" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-muted/20">
-                  <Button onClick={() => setShowMapTokenDialog(true)}>
-                    Set Mapbox Token to Display Map
-                  </Button>
+            {/* Location display area */}
+            <div className="w-full h-64 rounded-md overflow-hidden border relative">
+              <div className="w-full h-full flex items-center justify-center bg-muted/20">
+                <div className="text-center p-4">
+                  <div className="animate-pulse mb-2">
+                    <MapPin className="h-8 w-8 text-primary mx-auto" />
+                  </div>
+                  {location ? (
+                    <p className="font-medium">
+                      Location Active
+                    </p>
+                  ) : (
+                    <p className="text-muted-foreground">
+                      Waiting for location...
+                    </p>
+                  )}
                 </div>
-              )}
+              </div>
+              <img 
+                src="/student-uploads/campus-map.jpg" 
+                alt="University of Limpopo Campus Map" 
+                className="absolute inset-0 w-full h-full object-cover opacity-20 z-0"
+              />
             </div>
             
             <div className="text-center text-sm text-muted-foreground">
@@ -405,6 +452,7 @@ const Map = () => {
                 onClick={shareLocation} 
                 variant="outline" 
                 className="flex gap-2"
+                disabled={!location}
               >
                 <Share2 className="h-4 w-4" />
                 Share Location
@@ -414,65 +462,22 @@ const Map = () => {
                 onClick={shareWithEmergencyContacts} 
                 variant="outline" 
                 className="flex gap-2"
+                disabled={!location}
               >
                 <UserPlus className="h-4 w-4" />
                 Share with Emergency Contacts
               </Button>
               
-              <Dialog open={showEmergencyDialog} onOpenChange={setShowEmergencyDialog}>
-                <DialogTrigger asChild>
-                  <Button variant="destructive" className="flex gap-2">
-                    <AlertTriangle className="h-4 w-4" />
-                    Send Location to Campus Security
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      Send Emergency Location
-                    </DialogTitle>
-                  </DialogHeader>
-                  
-                  {!emergencySent ? (
-                    <div className="space-y-4 py-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="emergencyDetails">Emergency Details (Optional)</Label>
-                        <Input 
-                          id="emergencyDetails"
-                          placeholder="Briefly describe your emergency situation"
-                          value={emergencyDetails}
-                          onChange={(e) => setEmergencyDetails(e.target.value)}
-                        />
-                      </div>
-                      
-                      <div className="pt-2">
-                        <Button 
-                          onClick={sendEmergencyLocation} 
-                          className="w-full"
-                        >
-                          <Shield className="mr-2 h-4 w-4" />
-                          Send Emergency Location
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="py-6 text-center">
-                      <div className="flex items-center justify-center mb-4">
-                        <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                          <Shield className="h-6 w-6 text-green-600" />
-                        </div>
-                      </div>
-                      <p className="font-medium text-green-700">
-                        Emergency location successfully sent!
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Campus security has been notified.
-                      </p>
-                    </div>
-                  )}
-                </DialogContent>
-              </Dialog>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="destructive" 
+                  className="flex gap-2" 
+                  disabled={!location}
+                >
+                  <AlertTriangle className="h-4 w-4" />
+                  Send Location to Campus Security
+                </Button>
+              </DialogTrigger>
             </div>
             
             <div className="flex items-center space-x-2 mt-4">
@@ -490,6 +495,24 @@ const Map = () => {
               ) : (
                 <span>Enable continuous tracking for real-time location updates</span>
               )}
+            </div>
+          </div>
+        )}
+        
+        {/* Location Consent Controls at Bottom */}
+        {consentGiven !== null && (
+          <div className="mt-6 pt-4 border-t w-full">
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-muted-foreground">
+                Location Tracking:
+              </p>
+              <Button 
+                variant={consentGiven ? "outline" : "default"} 
+                size="sm"
+                onClick={() => handleConsentDecision(!consentGiven)}
+              >
+                {consentGiven ? "Disable" : "Enable"}
+              </Button>
             </div>
           </div>
         )}
