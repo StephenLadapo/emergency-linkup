@@ -17,15 +17,16 @@ interface AuthFormProps {
   onSubmit: (email: string, password: string, fullName?: string, studentNumber?: string, confirmPassword?: string) => void;
   showConfirmPassword?: boolean;
   passwordRequirements?: PasswordRequirement[];
+  loading?: boolean; // Add the loading prop to the interface
 }
 
-const AuthForm = ({ mode, onSubmit, showConfirmPassword = false, passwordRequirements = [] }: AuthFormProps) => {
+const AuthForm = ({ mode, onSubmit, showConfirmPassword = false, passwordRequirements = [], loading = false }: AuthFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [studentNumber, setStudentNumber] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPasswordField, setShowConfirmPasswordField] = useState(false);
 
@@ -41,7 +42,7 @@ const AuthForm = ({ mode, onSubmit, showConfirmPassword = false, passwordRequire
       return;
     }
     
-    setLoading(true);
+    setLocalLoading(true);
     try {
       onSubmit(
         email, 
@@ -54,13 +55,16 @@ const AuthForm = ({ mode, onSubmit, showConfirmPassword = false, passwordRequire
       console.error('Auth error:', error);
       toast.error('Authentication failed. Please try again.');
     } finally {
-      setLoading(false);
+      setLocalLoading(false);
     }
   };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+
+  // Use the passed loading prop or the local loading state
+  const isLoading = loading || localLoading;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -163,9 +167,9 @@ const AuthForm = ({ mode, onSubmit, showConfirmPassword = false, passwordRequire
       <Button 
         type="submit"
         className="w-full mt-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700" 
-        disabled={loading}
+        disabled={isLoading}
       >
-        {loading ? 'Processing...' : mode === 'login' ? 'Login' : 'Register'}
+        {isLoading ? 'Processing...' : mode === 'login' ? 'Login' : 'Register'}
       </Button>
     </form>
   );
