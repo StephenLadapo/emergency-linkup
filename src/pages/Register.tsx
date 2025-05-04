@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '@/components/AuthForm';
@@ -7,6 +6,7 @@ import { toast } from 'sonner';
 import Logo from '@/components/Logo';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
+import emailjs from '@emailjs/browser';
 
 // Password requirements
 const PASSWORD_MIN_LENGTH = 8;
@@ -18,13 +18,15 @@ const PASSWORD_REQUIREMENTS = [
   { check: (p: string) => /[^A-Za-z0-9]/.test(p), text: "At least one special character" }
 ];
 
+// Initialize EmailJS with your user ID
+emailjs.init("ZVJqFtna5EaBhHwj4");
+
 const Register = () => {
   const [loading, setLoading] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const validatePassword = (password: string): boolean => {
-    // Check if password meets all requirements
     const failedRequirements = PASSWORD_REQUIREMENTS.filter(req => !req.check(password));
     
     if (failedRequirements.length > 0) {
@@ -36,24 +38,43 @@ const Register = () => {
     return true;
   };
 
+  const sendConfirmationEmail = async (email: string, fullName: string) => {
+    try {
+      const templateParams = {
+        to_name: fullName,
+        to_email: email,
+        login_link: `${window.location.origin}/login`
+      };
+
+      await emailjs.send(
+        "service_fprjlcl",
+        "template_gu18aiq",
+        templateParams
+      );
+
+      toast.success('Registration successful! A confirmation email has been sent.');
+    } catch (error) {
+      console.error('Failed to send confirmation email:', error);
+      // Don't fail the registration if email fails to send
+      toast.success('Registration successful!');
+    }
+  };
+
   const handleRegister = async (email: string, password: string, fullName?: string, studentNumber?: string, confirmPassword?: string) => {
     setLoading(true);
     
-    // Check if passwords match
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
       setLoading(false);
       return;
     }
     
-    // Validate password strength
     if (!validatePassword(password)) {
       toast.error('Password does not meet security requirements');
       setLoading(false);
       return;
     }
     
-    // Check if email is from keyaka domain
     if (!email.endsWith('@keyaka.ul.ac.za')) {
       toast.error('Please use your University of Limpopo email address (@keyaka.ul.ac.za)');
       setLoading(false);
@@ -61,13 +82,21 @@ const Register = () => {
     }
     
     try {
-      // Store user directly without verification step
       const users = JSON.parse(localStorage.getItem('users') || '{}');
+      
+      // Check if user already exists
+      if (users[email]) {
+        toast.error('This email is already registered.');
+        setLoading(false);
+        return;
+      }
+
+      // Register the user
       users[email] = {
         name: fullName,
         email,
         studentNumber,
-        password, // In a real app, this should be hashed
+        password, // Remember: in production, hash this password
         createdAt: new Date().toISOString(),
         medicalInfo: {
           bloodType: '',
@@ -79,7 +108,11 @@ const Register = () => {
       };
       
       localStorage.setItem('users', JSON.stringify(users));
-      toast.success('Registration successful! Please log in.');
+      
+      // Send confirmation email (don't await so it doesn't block the UI)
+      sendConfirmationEmail(email, fullName || '');
+      
+      // Navigate to login after successful registration
       navigate('/login');
     } catch (error) {
       console.error('Registration error:', error);
@@ -117,7 +150,13 @@ const Register = () => {
             </AlertDescription>
           </Alert>
           
-          <AuthForm mode="register" onSubmit={handleRegister} showConfirmPassword={true} passwordRequirements={PASSWORD_REQUIREMENTS} />
+          <AuthForm 
+            mode="register" 
+            onSubmit={handleRegister} 
+            showConfirmPassword={true} 
+            passwordRequirements={PASSWORD_REQUIREMENTS} 
+            loading={loading}
+          />
           
           {passwordError && (
             <p className="mt-2 text-sm text-red-600">{passwordError}</p>
