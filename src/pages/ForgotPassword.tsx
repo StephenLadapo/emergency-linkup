@@ -1,13 +1,15 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Mail } from 'lucide-react';
 import Logo from '@/components/Logo';
+import emailjs from '@emailjs/browser';
+
+// Initialize EmailJS
+emailjs.init("ZVJqFtna5EaBhHwj4");
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -25,9 +27,31 @@ const ForgotPassword = () => {
     setLoading(true);
     
     try {
-      // Simulate API call for password reset
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      // Check if user exists in localStorage
+      const users = JSON.parse(localStorage.getItem('users') || '{}');
+      if (!users[email]) {
+        toast.error('No account found with this email address');
+        setLoading(false);
+        return;
+      }
+
+      // Generate reset token (simple version for demo)
+      const resetToken = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      users[email].resetToken = resetToken;
+      users[email].resetTokenExpires = Date.now() + 3600000; // 1 hour expiration
+      localStorage.setItem('users', JSON.stringify(users));
+
+      // Send password reset email using EmailJS
+      await emailjs.send(
+        "service_fprjlcl", // Your EmailJS service ID
+        "template_Acoirqf", // Your EmailJS template ID
+        {
+          to_email: email,
+          reset_link: `${window.location.origin}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`,
+          user_name: users[email].name || 'User'
+        }
+      );
+
       setSubmitted(true);
       toast.success('Password reset instructions sent to your email');
     } catch (error) {
@@ -43,7 +67,7 @@ const ForgotPassword = () => {
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-900/70 to-amber-700/70 mix-blend-multiply"></div>
         <img 
-          src="/lovable-uploads/5035b3d6-0fe7-4ccd-b109-16bb678bdc51.png" 
+          src="/images/campus-bg.jpg" 
           alt="University of Limpopo Campus" 
           className="w-full h-full object-cover"
         />
@@ -82,10 +106,10 @@ const ForgotPassword = () => {
                 
                 <Button 
                   className="w-full mt-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700" 
-                  onClick={handleSubmit} 
+                  type="submit"
                   disabled={loading}
                 >
-                  {loading ? 'Processing...' : 'Send Reset Link'}
+                  {loading ? 'Sending...' : 'Send Reset Link'}
                 </Button>
               </form>
             </>
@@ -97,6 +121,9 @@ const ForgotPassword = () => {
               <h3 className="text-xl font-semibold">Check Your Email</h3>
               <p className="text-muted-foreground">
                 We've sent reset instructions to <span className="font-medium">{email}</span>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                The link in the email will expire in 1 hour
               </p>
               <p className="text-sm text-muted-foreground">
                 If you don't see the email, please check your spam folder
