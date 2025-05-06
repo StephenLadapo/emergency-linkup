@@ -32,7 +32,7 @@ const Index = () => {
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-900/70 to-amber-700/70 mix-blend-multiply"></div>
         <img 
-          src="/lovable-uploads/4b755f41-3d7d-4087-8826-24bfe295eccc.png" 
+          src="/lovable-uploads/IMG-20250506-WA0016.jpg" 
           alt="University of Limpopo Campus" 
           className="w-full h-full object-cover"
         />
