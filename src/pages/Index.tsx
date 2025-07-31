@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
+import EmergencyFlowShowcase from '@/components/EmergencyFlowShowcase';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Shield, BookOpen, Stethoscope, HandHelping, Sparkles, School, GraduationCap, Phone, Mail, Facebook, Instagram, Linkedin, Users, CalendarDays, HeartPulse } from 'lucide-react';
@@ -141,7 +142,12 @@ const Index = () => {
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16 animate-fade-in delay-1000">
+            {/* Emergency Flow Showcase */}
+            <div className="mb-16 animate-fade-in delay-1000">
+              <EmergencyFlowShowcase />
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16 animate-fade-in delay-1200">
               <Button size="lg" className="px-10 py-6 text-lg rounded-full shadow-2xl hover:shadow-3xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 border border-amber-300/30 hover-scale transition-all duration-300 font-semibold" onClick={() => navigate('/register')}>
                 Register with University Email
               </Button>
