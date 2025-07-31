@@ -10,12 +10,12 @@ const EmergencyFlowPage = () => {
       className="min-h-screen bg-gradient-to-br from-background via-background/50 to-primary/5 relative"
       style={{
         backgroundImage: 'url(/lovable-uploads/958fac82-b5b5-4b6d-9224-9bcc612a58f9.png)',
-        backgroundSize: 'cover',
+        backgroundSize: 'contain',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
       }}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-background/80 via-background/60 to-primary/20"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-background/40 via-background/20 to-primary/10"></div>
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="mb-6">
           <Link to="/">
