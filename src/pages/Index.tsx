@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Header from '@/components/Header';
-import EmergencyFlowShowcase from '@/components/EmergencyFlowShowcase';
+
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Shield, BookOpen, Stethoscope, HandHelping, Sparkles, School, GraduationCap, Phone, Mail, Facebook, Instagram, Linkedin, Users, CalendarDays, HeartPulse } from 'lucide-react';
@@ -142,10 +142,22 @@ const Index = () => {
               </div>
             </div>
             
-            {/* Emergency Flow Showcase */}
-            <div className="mb-16 animate-fade-in delay-1000">
-              <EmergencyFlowShowcase />
-            </div>
+        {/* CTA Section */}
+        <section className="py-20 px-6 text-center">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              See How It Works
+            </h2>
+            <p className="text-muted-foreground mb-8">
+              Experience our emergency response system in action through an interactive demonstration.
+            </p>
+            <Link to="/emergency-flow">
+              <Button size="lg" className="animate-scale-in hover:animate-pulse">
+                View Emergency Flow Demo
+              </Button>
+            </Link>
+          </div>
+        </section>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16 animate-fade-in delay-1200">
               <Button size="lg" className="px-10 py-6 text-lg rounded-full shadow-2xl hover:shadow-3xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 border border-amber-300/30 hover-scale transition-all duration-300 font-semibold" onClick={() => navigate('/register')}>

@@ -346,7 +346,7 @@ const EmergencyFlowShowcase = () => {
         
         <div className="flex justify-center space-x-4 mb-6">
           <Button onClick={startDemo} disabled={isPlaying} className="px-8">
-            {isPlaying ? 'Demo Playing...' : 'Start Demo'}
+            {isPlaying ? 'Playing...' : 'Start'}
           </Button>
           <Button onClick={resetDemo} variant="outline">
             Reset
