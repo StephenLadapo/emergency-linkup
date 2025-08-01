@@ -75,8 +75,8 @@ const Register = () => {
       return;
     }
     
-    if (!email.endsWith('@keyaka.ul.ac.za')) {
-      toast.error('Please use your University of Limpopo email address (@keyaka.ul.ac.za)');
+    if (!email.endsWith('@myturf.ul.ac.za')) {
+      toast.error('Please use your University of Limpopo email address (@myturf.ul.ac.za)');
       setLoading(false);
       return;
     }

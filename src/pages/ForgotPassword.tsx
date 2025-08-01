@@ -17,8 +17,8 @@ const ForgotPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email.endsWith('@keyaka.ul.ac.za')) {
-      toast.error('Please use your university email (@keyaka.ul.ac.za)');
+    if (!email.endsWith('@myturf.ul.ac.za')) {
+      toast.error('Please use your university email (@myturf.ul.ac.za)');
       return;
     }
     
@@ -70,7 +70,7 @@ const ForgotPassword = () => {
                       <Input 
                         id="email"
                         type="email" 
-                        placeholder="yourname@keyaka.ul.ac.za"
+                        placeholder="yourstudentnumber@myturf.ul.ac.za"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-10 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-amber-200 dark:border-amber-900/30"
