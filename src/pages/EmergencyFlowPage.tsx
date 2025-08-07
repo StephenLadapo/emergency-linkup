@@ -9,7 +9,7 @@ const EmergencyFlowPage = () => {
     <div 
       className="min-h-screen bg-gradient-to-br from-background via-background/50 to-primary/5 relative"
       style={{
-        backgroundImage: 'url(/lovable-uploads/958fac82-b5b5-4b6d-9224-9bcc612a58f9.png)',
+        backgroundImage: 'url(/lovable-uploads/59a036e2-bc00-4afc-be0e-ca4111d9d433.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
