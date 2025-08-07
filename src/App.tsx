@@ -19,6 +19,10 @@ import ProfilePage from "./pages/dashboard/ProfilePage";
 import MessagesPage from "./pages/dashboard/MessagesPage";
 import HistoryPage from "./pages/dashboard/HistoryPage";
 import SettingsPage from "./pages/dashboard/SettingsPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AuthPage from "./components/AuthPage";
+import StudentDashboard from "./pages/StudentDashboard";
+import StaffDashboard from "./components/StaffDashboard";
 
 const queryClient = new QueryClient();
 
@@ -30,13 +34,32 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<AuthPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/emergency-flow" element={<EmergencyFlowPage />} />
           
-          {/* Dashboard Routes */}
-          <Route path="/dashboard" element={<DashboardLayout />}>
+          {/* Protected Routes */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute requiredRole={['student']}>
+                <StudentDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/staff" 
+            element={
+              <ProtectedRoute requiredRole={['medical_staff', 'security_staff', 'admin']}>
+                <StaffDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Legacy Dashboard Routes (keep for compatibility) */}
+          <Route path="/dashboard-old" element={<DashboardLayout />}>
             <Route index element={<DashboardHome />} />
             <Route path="location" element={<LocationPage />} />
             <Route path="audio" element={<AudioPage />} />
