@@ -10,6 +10,7 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import EmergencyFlowPage from "./pages/EmergencyFlowPage";
 import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/ResetPassword";
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import LocationPage from "./pages/dashboard/LocationPage";
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/emergency-flow" element={<EmergencyFlowPage />} />
           
           {/* Dashboard Routes */}
