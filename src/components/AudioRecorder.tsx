@@ -161,12 +161,8 @@ const AudioRecorder = ({ onSoundDetectionChange }: AudioRecorderProps) => {
   };
   
   const startSoundAnalysis = async () => {
-    if (savedPatterns.length === 0) {
-      toast.error('No sound patterns saved to match against. Please record and save patterns first.');
-      setSoundDetectionActive(false);
-      return;
-    }
-    
+    // Proceed with real-time voice analysis
+
     try {
       setAnalysingAudio(true);
       
@@ -223,16 +219,13 @@ const AudioRecorder = ({ onSoundDetectionChange }: AudioRecorderProps) => {
             if (now - (lastAlertRef.current || 0) > 30000) {
               lastAlertRef.current = now;
               const matched = Array.isArray(data.matched_keywords) ? data.matched_keywords.join(', ') : undefined;
-              addToHistory('emergency', `Emergency voice detected${matched ? ` (${matched})` : ''}`, 'pending');
-              toast.error(`Emergency detected${data.transcript ? `: ${data.transcript}` : ''}`, {
+              addToHistory(
+                'emergency',
+                `Emergency voice detected${matched ? ` (${matched})` : ''}${data?.confidence ? ` [confidence: ${Math.round((data.confidence as number) * 100)}%]` : ''}`,
+                'sent'
+              );
+              toast.success(`Emergency detected and alert sent${data?.transcript ? `: ${data.transcript}` : ''}`, {
                 duration: 10000,
-                action: {
-                  label: "Alert Emergency Services",
-                  onClick: () => {
-                    toast.success("Emergency services alerted!");
-                    addToHistory('emergency', 'Emergency alert sent for detected voice', 'resolved');
-                  }
-                }
               });
             }
           }
@@ -515,7 +508,6 @@ const AudioRecorder = ({ onSoundDetectionChange }: AudioRecorderProps) => {
             <Button 
               variant={soundDetectionActive ? "destructive" : "outline"} 
               onClick={toggleSoundDetection}
-              disabled={savedPatterns.length === 0}
               className="ml-2"
             >
               {soundDetectionActive ? (
@@ -543,11 +535,6 @@ const AudioRecorder = ({ onSoundDetectionChange }: AudioRecorderProps) => {
             </div>
           )}
           
-          {savedPatterns.length === 0 && (
-            <div className="text-sm p-2 bg-muted rounded-md">
-              <p>You need to save at least one sound pattern before activating detection.</p>
-            </div>
-          )}
           
           {soundDetectionActive && (
             <div className="text-sm p-2 bg-amber-100 dark:bg-amber-900/10 rounded-md">
