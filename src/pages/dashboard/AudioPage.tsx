@@ -1,35 +1,45 @@
 
-import AudioRecorder from "@/components/AudioRecorder";
+import EmergencyVoiceDetector from "@/components/EmergencyVoiceDetector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
+import { EmergencyDetectionResult } from "@/utils/EmergencyMLModel";
 
 const AudioPage = () => {
-  const [isSoundDetectionActive, setIsSoundDetectionActive] = useState(false);
+  const [lastEmergencyDetection, setLastEmergencyDetection] = useState<EmergencyDetectionResult | null>(null);
   
-  const handleSoundDetection = (isActive: boolean) => {
-    setIsSoundDetectionActive(isActive);
+  const handleEmergencyDetected = (result: EmergencyDetectionResult) => {
+    setLastEmergencyDetection(result);
+    // Additional emergency handling logic can be added here
   };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-semibold">Audio Recording</h2>
-      <p className="text-muted-foreground">
-        Record audio or activate sound detection for emergency situations.
-      </p>
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Emergency Voice Detection System</h1>
+        <p className="text-lg text-muted-foreground mb-1">
+          University of Limpopo - Advanced AI-Powered Emergency Response
+        </p>
+        <p className="text-muted-foreground">
+          Real-time machine learning voice analysis for emergency detection and response.
+        </p>
+      </div>
       
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Record & Sound Detection</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AudioRecorder onSoundDetectionChange={handleSoundDetection} />
-          {isSoundDetectionActive && (
-            <div className="bg-amber-100 p-2 rounded mt-4 text-sm text-center">
-              Sound detection is active. Unusual sounds will trigger an emergency alert.
+      <EmergencyVoiceDetector onEmergencyDetected={handleEmergencyDetected} />
+      
+      {lastEmergencyDetection && (
+        <Card className="border-red-500">
+          <CardHeader>
+            <CardTitle className="text-red-600">Last Emergency Detection</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <p><strong>Type:</strong> {lastEmergencyDetection.emergencyType.replace('_', ' ').toUpperCase()}</p>
+              <p><strong>Confidence:</strong> {Math.round(lastEmergencyDetection.confidence * 100)}%</p>
+              <p><strong>Time:</strong> {new Date(lastEmergencyDetection.timestamp).toLocaleString()}</p>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
