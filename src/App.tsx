@@ -19,6 +19,7 @@ import ProfilePage from "./pages/dashboard/ProfilePage";
 import MessagesPage from "./pages/dashboard/MessagesPage";
 import HistoryPage from "./pages/dashboard/HistoryPage";
 import SettingsPage from "./pages/dashboard/SettingsPage";
+import EmotionDetector from "./pages/EmotionDetector";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/emergency-flow" element={<EmergencyFlowPage />} />
+          <Route path="/emotion" element={<EmotionDetector />} />
           
           {/* Dashboard Routes */}
           <Route path="/dashboard" element={<DashboardLayout />}>
