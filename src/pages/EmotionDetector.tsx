@@ -45,7 +45,7 @@ const EmotionDetector = () => {
     setSEO(
       "Emotion Detector | EmergencyLinkUp",
       "Open your camera to scan your face and detect emotions in real-time.",
-      "/emotion"
+      "/dashboard/emotion"
     );
   }, []);
 
@@ -171,6 +171,7 @@ const EmotionDetector = () => {
   return (
     <main className="min-h-screen py-10 px-4">
       <section className="max-w-5xl mx-auto">
+        <h1 className="sr-only">Emotion Detector - Real-time Facial Emotion Analysis</h1>
         <Card className="overflow-hidden">
           <CardHeader>
             <CardTitle className="text-2xl">Emotion Detector (Camera)</CardTitle>

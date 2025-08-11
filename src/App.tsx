@@ -35,13 +35,13 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/emergency-flow" element={<EmergencyFlowPage />} />
-          <Route path="/emotion" element={<EmotionDetector />} />
           
           {/* Dashboard Routes */}
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardHome />} />
             <Route path="location" element={<LocationPage />} />
             <Route path="audio" element={<AudioPage />} />
+            <Route path="emotion" element={<EmotionDetector />} />
             <Route path="assistant" element={<AssistantPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="messages" element={<MessagesPage />} />
