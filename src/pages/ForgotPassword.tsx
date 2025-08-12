@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from 'sonner';
 import { Mail } from 'lucide-react';
 import Logo from '@/components/Logo';
+import emailjs from '@emailjs/browser';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -25,8 +26,24 @@ const ForgotPassword = () => {
     setLoading(true);
     
     try {
-      // Simulate API call for password reset
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Initialize EmailJS with public key
+      emailjs.init('HKBvKEggaLSqOOTUt');
+      
+      // Generate a temporary reset token (in real app, this would come from backend)
+      const resetToken = Math.random().toString(36).substring(2, 15);
+      const resetLink = `${window.location.origin}/reset-password?token=${resetToken}`;
+      
+      // Send email using EmailJS
+      await emailjs.send(
+        'service_nxrtqmg', // Service ID
+        'template_ul3y2jg', // Template ID
+        {
+          user_email: email,
+          user_name: email.split('@')[0], // Extract student number as name
+          reset_link: resetLink,
+          to_email: email
+        }
+      );
       
       setSubmitted(true);
       toast.success('Password reset instructions sent to your email');
