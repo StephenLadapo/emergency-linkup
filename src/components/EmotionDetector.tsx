@@ -132,7 +132,7 @@ const EmotionDetector: React.FC<EmotionDetectorProps> = ({
   const stopDetection = () => {
     if (detectionRef.current) {
       // Clear both setTimeout and cancelAnimationFrame to ensure proper cleanup
-      clearTimeout(detectionRef.current);
+      window.clearTimeout(detectionRef.current);
       cancelAnimationFrame(detectionRef.current);
       detectionRef.current = null;
     }
@@ -253,7 +253,7 @@ const EmotionDetector: React.FC<EmotionDetectorProps> = ({
   useEffect(() => {
     return () => {
       if (detectionRef.current) {
-        clearTimeout(detectionRef.current);
+        window.clearTimeout(detectionRef.current);
         cancelAnimationFrame(detectionRef.current);
       }
       
