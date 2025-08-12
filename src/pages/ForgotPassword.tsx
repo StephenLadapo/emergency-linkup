@@ -38,10 +38,11 @@ const ForgotPassword = () => {
         'service_nxrtqmg', // Service ID
         'template_ul3y2jg', // Template ID
         {
-          user_email: email,
-          user_name: email.split('@')[0], // Extract student number as name
-          reset_link: resetLink,
-          to_email: email
+          to_name: email.split('@')[0], // Student number
+          to_email: email, // Recipient email
+          from_name: 'EmergencyLinkUp',
+          message: `Please click the following link to reset your password: ${resetLink}`,
+          reset_link: resetLink
         }
       );
       
