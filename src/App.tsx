@@ -20,6 +20,8 @@ import ProfilePage from "./pages/dashboard/ProfilePage";
 import MessagesPage from "./pages/dashboard/MessagesPage";
 import HistoryPage from "./pages/dashboard/HistoryPage";
 import SettingsPage from "./pages/dashboard/SettingsPage";
+import EmergencyVoiceDemo from "./pages/EmergencyVoiceDemo";
+import EmotionDetectorDemo from "./pages/EmotionDetectorDemo";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +38,8 @@ const App = () => (
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/emergency-flow" element={<EmergencyFlowPage />} />
+          <Route path="/emergency-voice-demo" element={<EmergencyVoiceDemo />} />
+          <Route path="/emotion-detector-demo" element={<EmotionDetectorDemo />} />
           
           {/* Dashboard Routes */}
           <Route path="/dashboard" element={<DashboardLayout />}>
