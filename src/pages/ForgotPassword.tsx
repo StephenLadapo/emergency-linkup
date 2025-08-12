@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from 'sonner';
 import { Mail } from 'lucide-react';
 import Logo from '@/components/Logo';
-import emailjs from '@emailjs/browser';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -26,24 +25,8 @@ const ForgotPassword = () => {
     setLoading(true);
     
     try {
-      // Generate a temporary reset token (in a real app, this would be generated on the backend)
-      const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      const resetLink = `${window.location.origin}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
-      
-      // Send email using EmailJS
-      const templateParams = {
-        to_email: email,
-        reset_link: resetLink,
-        user_email: email,
-        to_name: email.split('@')[0] // Use the part before @ as name
-      };
-
-      await emailjs.send(
-        'service_nxrtqmg', // Your service ID
-        'template_ul3y2jg', // Your template ID
-        templateParams,
-        'YOUR_PUBLIC_KEY' // You'll need to replace this with your EmailJS public key
-      );
+      // Simulate API call for password reset
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       setSubmitted(true);
       toast.success('Password reset instructions sent to your email');
