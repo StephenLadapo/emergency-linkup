@@ -9,35 +9,50 @@ import { toast } from 'sonner';
 import { Mail } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { supabase } from '@/integrations/supabase/client';
-
+import emailjs from '@emailjs/browser';
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-
+  const [codeSent, setCodeSent] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [codeInput, setCodeInput] = useState('');
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email.endsWith('@myturf.ul.ac.za')) {
       toast.error('Please use your university email (@myturf.ul.ac.za)');
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
-      // Send Supabase password reset email
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
+      // Generate 5 different 6-digit codes and pick one randomly
+      const codes = Array.from({ length: 5 }, () => Math.floor(100000 + Math.random() * 900000).toString());
+      const selected = codes[Math.floor(Math.random() * codes.length)];
+      setVerificationCode(selected);
 
-      if (error) throw error;
+      // Send verification code via EmailJS
+      const templateParams = {
+        to_email: email,
+        to_name: 'Student',
+        message: `Your password reset verification code is ${selected}. It expires in 10 minutes.`,
+        verification_code: selected,
+      };
 
-      setSubmitted(true);
-      toast.success('Password reset link sent to your email');
+      await emailjs.send(
+        'service_nxrtqmg',
+        'template_ul3y2jg',
+        templateParams,
+        'HKBvKEggaLSqOOTUt'
+      );
+
+      setCodeSent(true);
+      toast.success('Verification code sent to your email');
     } catch (error) {
-      console.error('Password reset error:', error);
-      toast.error('Failed to send password reset email. Please try again.');
+      console.error('EmailJS send error:', error);
+      toast.error('Failed to send verification code. Please try again.');
     } finally {
       setLoading(false);
     }

@@ -214,7 +214,7 @@ const EmotionDetector: React.FC<EmotionDetectorProps> = ({
     }
     
     // Continue detection loop with a slight delay to improve performance
-    detectionRef.current = setTimeout(() => {
+    detectionRef.current = window.setTimeout(() => {
       requestAnimationFrame(detectEmotions);
     }, detectionFrequency);
   };
