@@ -151,11 +151,11 @@ const Index = () => {
             <p className="text-muted-foreground mb-8">
               Experience our emergency response system in action through an interactive demonstration.
             </p>
-<Link to="/emergency-flow">
-  <Button size="lg" className="animate-scale-in hover:animate-pulse">
-    View Emergency Flow Demo
-  </Button>
-</Link>
+            <Link to="/emergency-flow">
+              <Button size="lg" className="animate-scale-in hover:animate-pulse">
+                View Emergency Flow Demo
+              </Button>
+            </Link>
           </div>
         </section>
             

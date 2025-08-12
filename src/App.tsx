@@ -19,7 +19,6 @@ import ProfilePage from "./pages/dashboard/ProfilePage";
 import MessagesPage from "./pages/dashboard/MessagesPage";
 import HistoryPage from "./pages/dashboard/HistoryPage";
 import SettingsPage from "./pages/dashboard/SettingsPage";
-import EmotionDetector from "./pages/EmotionDetector";
 
 const queryClient = new QueryClient();
 
@@ -41,7 +40,6 @@ const App = () => (
             <Route index element={<DashboardHome />} />
             <Route path="location" element={<LocationPage />} />
             <Route path="audio" element={<AudioPage />} />
-            <Route path="emotion" element={<EmotionDetector />} />
             <Route path="assistant" element={<AssistantPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="messages" element={<MessagesPage />} />

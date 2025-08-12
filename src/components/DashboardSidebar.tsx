@@ -7,7 +7,6 @@ import {
   Bell,
   History,
   Settings,
-  Smile,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -41,11 +40,6 @@ const menuItems = [
     title: "Audio Recording",
     icon: Mic,
     path: "/dashboard/audio",
-  },
-  {
-    title: "Emotion Detector",
-    icon: Smile,
-    path: "/dashboard/emotion",
   },
   {
     title: "AI Assistant",
