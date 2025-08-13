@@ -26,7 +26,6 @@ const ForgotPassword = () => {
     setLoading(true);
     
     try {
-      // Send Supabase password reset email
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
@@ -35,9 +34,9 @@ const ForgotPassword = () => {
 
       setSubmitted(true);
       toast.success('Password reset link sent to your email');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Password reset error:', error);
-      toast.error('Failed to send password reset email. Please try again.');
+      toast.error(error.message || 'Failed to send password reset email. Please try again.');
     } finally {
       setLoading(false);
     }

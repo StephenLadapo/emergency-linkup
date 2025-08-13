@@ -7,6 +7,7 @@ import Logo from '@/components/Logo';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
 import emailjs from '@emailjs/browser';
+import { supabase } from '@/integrations/supabase/client';
 
 // Password requirements
 const PASSWORD_MIN_LENGTH = 8;
@@ -82,41 +83,38 @@ const Register = () => {
     }
     
     try {
-      const users = JSON.parse(localStorage.getItem('users') || '{}');
-      
-      // Check if user already exists
-      if (users[email]) {
-        toast.error('This email is already registered.');
-        setLoading(false);
-        return;
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard/profile`,
+          data: {
+            full_name: fullName,
+            student_id: studentNumber,
+          }
+        }
+      });
+
+      if (error) {
+        throw error;
       }
 
-      // Register the user
-      users[email] = {
-        name: fullName,
-        email,
-        studentNumber,
-        password, // Remember: in production, hash this password
-        createdAt: new Date().toISOString(),
-        medicalInfo: {
-          bloodType: '',
-          allergies: '',
-          conditions: '',
-          medications: ''
-        },
-        emergencyContacts: []
-      };
-      
-      localStorage.setItem('users', JSON.stringify(users));
-      
-      // Send confirmation email (don't await so it doesn't block the UI)
-      sendConfirmationEmail(email, fullName || '');
-      
-      // Navigate to login after successful registration
-      navigate('/login');
-    } catch (error) {
+      if (data.user) {
+        toast.success('Registration successful! Please check your email to verify your account.');
+        
+        // Send confirmation email via EmailJS
+        try {
+          await sendConfirmationEmail(email, fullName || '');
+        } catch (emailError) {
+          console.error('Failed to send confirmation email:', emailError);
+          // Don't fail registration if email fails to send
+        }
+        
+        navigate('/login');
+      }
+    } catch (error: any) {
       console.error('Registration error:', error);
-      toast.error('Registration failed. Please try again.');
+      toast.error(error.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
