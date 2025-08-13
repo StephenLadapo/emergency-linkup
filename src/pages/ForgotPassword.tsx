@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from 'sonner';
 import { Mail } from 'lucide-react';
 import Logo from '@/components/Logo';
-import { supabase } from '@/integrations/supabase/client';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -18,25 +17,22 @@ const ForgotPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email.endsWith('@gmail.com')) {
-      toast.error('Please use your Gmail email (@gmail.com)');
+    if (!email.endsWith('@myturf.ul.ac.za')) {
+      toast.error('Please use your university email (@myturf.ul.ac.za)');
       return;
     }
     
     setLoading(true);
     
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-
-      if (error) throw error;
-
+      // Simulate API call for password reset
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       setSubmitted(true);
-      toast.success('Password reset link sent to your email');
-    } catch (error: any) {
+      toast.success('Password reset instructions sent to your email');
+    } catch (error) {
       console.error('Password reset error:', error);
-      toast.error(error.message || 'Failed to send password reset email. Please try again.');
+      toast.error('Failed to send password reset email. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -59,7 +55,7 @@ const ForgotPassword = () => {
             <Logo className="mb-4" />
             <h1 className="text-3xl font-bold text-gradient-primary">Forgot Password</h1>
             <p className="text-muted-foreground">
-              Enter your Gmail email to receive password reset instructions
+              Enter your university email to receive password reset instructions
             </p>
           </div>
           
@@ -67,14 +63,14 @@ const ForgotPassword = () => {
             <>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Gmail Email</Label>
+                  <Label htmlFor="email">University Email</Label>
                   <div className="flex">
                     <div className="relative flex-grow">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input 
                         id="email"
                         type="email" 
-                        placeholder="yourname@gmail.com"
+                        placeholder="yourstudentnumber@myturf.ul.ac.za"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-10 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-amber-200 dark:border-amber-900/30"
