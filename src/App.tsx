@@ -22,6 +22,7 @@ import HistoryPage from "./pages/dashboard/HistoryPage";
 import SettingsPage from "./pages/dashboard/SettingsPage";
 import EmergencyVoiceDemo from "./pages/EmergencyVoiceDemo";
 import EmotionDetectorDemo from "./pages/EmotionDetectorDemo";
+import EmotionScanner from "./pages/EmotionScanner";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/emergency-flow" element={<EmergencyFlowPage />} />
           <Route path="/emergency-voice-demo" element={<EmergencyVoiceDemo />} />
           <Route path="/emotion-detector-demo" element={<EmotionDetectorDemo />} />
+          <Route path="/emotion-scanner" element={<EmotionScanner />} />
           
           {/* Dashboard Routes */}
           <Route path="/dashboard" element={<DashboardLayout />}>

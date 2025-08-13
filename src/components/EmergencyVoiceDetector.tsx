@@ -330,7 +330,7 @@ const EmergencyVoiceDetector: React.FC<EmergencyVoiceDetectorProps> = ({
           autoGainControl: true,       // Keep auto gain
           sampleRate: { ideal: 22050 },// Match model's sample rate
           channelCount: 1,             // Mono audio (simpler processing)
-          latency: 0.01                // Low latency for real-time processing
+          
         } 
       });
       

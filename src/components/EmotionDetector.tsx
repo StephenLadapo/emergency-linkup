@@ -30,7 +30,8 @@ const EmotionDetector: React.FC<EmotionDetectorProps> = ({
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [detectionFrequency, setDetectionFrequency] = useState<number>(500); // ms
   
-  const detectionRef = useRef<number | null>(null);
+  const animationRef = useRef<number | null>(null);
+  const timeoutRef = useRef<number | null>(null);
   
   // Load face-api models
   const loadModels = async () => {
@@ -47,10 +48,7 @@ const EmotionDetector: React.FC<EmotionDetectorProps> = ({
         setLoadingProgress(40);
         
         await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-        setLoadingProgress(60);
-        
-        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-        setLoadingProgress(80);
+        setLoadingProgress(70);
         
         await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
         setLoadingProgress(100);
@@ -130,11 +128,14 @@ const EmotionDetector: React.FC<EmotionDetectorProps> = ({
   
   // Stop face detection
   const stopDetection = () => {
-    if (detectionRef.current) {
-      // Clear both setTimeout and cancelAnimationFrame to ensure proper cleanup
-      clearTimeout(detectionRef.current);
-      cancelAnimationFrame(detectionRef.current);
-      detectionRef.current = null;
+    // Clear timers/animation frames
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    if (animationRef.current !== null) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
     }
     
     setIsDetecting(false);
@@ -151,7 +152,7 @@ const EmotionDetector: React.FC<EmotionDetectorProps> = ({
     
     // Check if video is ready
     if (video.readyState !== 4) {
-      detectionRef.current = requestAnimationFrame(detectEmotions);
+      animationRef.current = requestAnimationFrame(detectEmotions);
       return;
     }
     
@@ -214,8 +215,11 @@ const EmotionDetector: React.FC<EmotionDetectorProps> = ({
     }
     
     // Continue detection loop with a slight delay to improve performance
-    detectionRef.current = setTimeout(() => {
-      requestAnimationFrame(detectEmotions);
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = window.setTimeout(() => {
+      animationRef.current = requestAnimationFrame(detectEmotions);
     }, detectionFrequency);
   };
   
@@ -252,9 +256,13 @@ const EmotionDetector: React.FC<EmotionDetectorProps> = ({
   // Clean up on unmount
   useEffect(() => {
     return () => {
-      if (detectionRef.current) {
-        clearTimeout(detectionRef.current);
-        cancelAnimationFrame(detectionRef.current);
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
       }
       
       if (videoRef.current && videoRef.current.srcObject) {
