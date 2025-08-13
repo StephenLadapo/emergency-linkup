@@ -83,6 +83,8 @@ const Register = () => {
     }
     
     try {
+      console.log('Attempting registration with:', email, fullName);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -95,13 +97,20 @@ const Register = () => {
         }
       });
 
+      console.log('Registration response:', { data, error });
+
       if (error) {
+        console.error('Registration error:', error);
         throw error;
       }
 
       if (data.user) {
+        console.log('User created:', data.user);
+        console.log('Confirmation sent at:', data.user.confirmation_sent_at);
+        console.log('Email confirmed at:', data.user.email_confirmed_at);
+        
         // Check if email confirmation is required
-        if (!data.user.email_confirmed_at && data.user.confirmation_sent_at) {
+        if (data.user.confirmation_sent_at && !data.user.email_confirmed_at) {
           toast.success('Registration successful! Please check your email to verify your account before signing in.');
         } else {
           toast.success('Registration successful! You can now sign in.');
@@ -119,7 +128,15 @@ const Register = () => {
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      toast.error(error.message || 'Registration failed. Please try again.');
+      
+      // Handle specific error cases
+      if (error.message.includes('User already registered')) {
+        toast.error('This email is already registered. Please try signing in instead.');
+      } else if (error.message.includes('signup_disabled')) {
+        toast.error('New signups are currently disabled.');
+      } else {
+        toast.error(error.message || 'Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

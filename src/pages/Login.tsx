@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Logo from '@/components/Logo';
 import { supabase } from '@/integrations/supabase/client';
+import ResendConfirmation from '@/components/ResendConfirmation';
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
+  const [showResendConfirmation, setShowResendConfirmation] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (email: string, password: string) => {
@@ -21,25 +23,40 @@ const Login = () => {
         password,
       });
 
+      console.log('Login response:', { data, error });
+
       if (error) {
         console.error('Login error:', error);
-        throw error;
+        
+        // Handle specific error cases
+        if (error.message.includes('Invalid login credentials')) {
+          toast.error('Invalid email or password. Please check your credentials.');
+        } else if (error.message.includes('Email not confirmed')) {
+          toast.error('Please check your email and click the confirmation link before signing in.');
+        } else if (error.message.includes('signup_disabled')) {
+          toast.error('New signups are currently disabled.');
+        } else {
+          toast.error(error.message || 'Login failed. Please try again.');
+        }
+        return;
       }
 
       if (data.user) {
         console.log('Login successful for:', data.user.email);
+        console.log('User confirmed:', data.user.email_confirmed_at);
+        
+        // Check if user email is confirmed
+        if (!data.user.email_confirmed_at) {
+          toast.error('Please check your email and click the confirmation link to activate your account.');
+          return;
+        }
+        
         toast.success('Login successful!');
         navigate('/dashboard/profile');
       }
     } catch (error: any) {
-      console.error('Login error:', error);
-      if (error.message.includes('Invalid login credentials')) {
-        toast.error('Invalid email or password. Please check your credentials.');
-      } else if (error.message.includes('Email not confirmed')) {
-        toast.error('Please check your email and click the confirmation link before signing in.');
-      } else {
-        toast.error(error.message || 'Login failed. Please check your credentials.');
-      }
+      console.error('Unexpected login error:', error);
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -73,6 +90,22 @@ const Login = () => {
               Forgot your password?
             </Link>
           </div>
+          
+          <div className="mt-2 text-center">
+            <button 
+              type="button"
+              onClick={() => setShowResendConfirmation(!showResendConfirmation)} 
+              className="text-sm text-muted-foreground hover:text-primary underline"
+            >
+              Need to resend confirmation email?
+            </button>
+          </div>
+          
+          {showResendConfirmation && (
+            <div className="mt-4">
+              <ResendConfirmation />
+            </div>
+          )}
           
           <div className="mt-6 text-center text-sm">
             Don't have an account?{' '}
