@@ -7,7 +7,6 @@ import Logo from '@/components/Logo';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
 import emailjs from '@emailjs/browser';
-import { supabase } from '@/integrations/supabase/client';
 
 // Password requirements
 const PASSWORD_MIN_LENGTH = 8;
@@ -76,67 +75,48 @@ const Register = () => {
       return;
     }
     
-    if (!email.endsWith('@gmail.com')) {
-      toast.error('Please use your Gmail email address (@gmail.com)');
+    if (!email.endsWith('@myturf.ul.ac.za')) {
+      toast.error('Please use your University of Limpopo email address (@myturf.ul.ac.za)');
       setLoading(false);
       return;
     }
     
     try {
-      console.log('Attempting registration with:', email, fullName);
+      const users = JSON.parse(localStorage.getItem('users') || '{}');
       
-      const { data, error } = await supabase.auth.signUp({
+      // Check if user already exists
+      if (users[email]) {
+        toast.error('This email is already registered.');
+        setLoading(false);
+        return;
+      }
+
+      // Register the user
+      users[email] = {
+        name: fullName,
         email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard/profile`,
-          data: {
-            full_name: fullName,
-            student_id: studentNumber,
-          }
-        }
-      });
-
-      console.log('Registration response:', { data, error });
-
-      if (error) {
-        console.error('Registration error:', error);
-        throw error;
-      }
-
-      if (data.user) {
-        console.log('User created:', data.user);
-        console.log('Confirmation sent at:', data.user.confirmation_sent_at);
-        console.log('Email confirmed at:', data.user.email_confirmed_at);
-        
-        // Check if email confirmation is required
-        if (data.user.confirmation_sent_at && !data.user.email_confirmed_at) {
-          toast.success('Registration successful! Please check your email to verify your account before signing in.');
-        } else {
-          toast.success('Registration successful! You can now sign in.');
-        }
-        
-        // Send confirmation email via EmailJS
-        try {
-          await sendConfirmationEmail(email, fullName || '');
-        } catch (emailError) {
-          console.error('Failed to send confirmation email:', emailError);
-          // Don't fail registration if email fails to send
-        }
-        
-        navigate('/login');
-      }
-    } catch (error: any) {
-      console.error('Registration error:', error);
+        studentNumber,
+        password, // Remember: in production, hash this password
+        createdAt: new Date().toISOString(),
+        medicalInfo: {
+          bloodType: '',
+          allergies: '',
+          conditions: '',
+          medications: ''
+        },
+        emergencyContacts: []
+      };
       
-      // Handle specific error cases
-      if (error.message.includes('User already registered')) {
-        toast.error('This email is already registered. Please try signing in instead.');
-      } else if (error.message.includes('signup_disabled')) {
-        toast.error('New signups are currently disabled.');
-      } else {
-        toast.error(error.message || 'Registration failed. Please try again.');
-      }
+      localStorage.setItem('users', JSON.stringify(users));
+      
+      // Send confirmation email (don't await so it doesn't block the UI)
+      sendConfirmationEmail(email, fullName || '');
+      
+      // Navigate to login after successful registration
+      navigate('/login');
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast.error('Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -159,7 +139,7 @@ const Register = () => {
             <Logo className="mb-4" />
             <h1 className="text-3xl font-bold text-gradient-primary">Create an Account</h1>
             <p className="text-muted-foreground">
-              Sign up to use the Emergency System
+              Sign up to use the University of Limpopo Emergency System
             </p>
           </div>
           

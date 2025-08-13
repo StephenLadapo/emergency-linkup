@@ -32,8 +32,8 @@ const AuthForm = ({ mode, onSubmit, showConfirmPassword = false, passwordRequire
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.endsWith('@gmail.com')) {
-      toast.error('Please use your Gmail email (@gmail.com)');
+    if (!email.endsWith('@myturf.ul.ac.za')) {
+      toast.error('Please use your university email (@myturf.ul.ac.za)');
       return;
     }
     
@@ -96,11 +96,11 @@ const AuthForm = ({ mode, onSubmit, showConfirmPassword = false, passwordRequire
       )}
       
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-foreground">Gmail Email</Label>
+        <Label htmlFor="email" className="text-foreground">University Email</Label>
         <Input 
           id="email"
           type="email" 
-          placeholder="yourname@gmail.com"
+          placeholder="yourstudentnumber@myturf.ul.ac.za"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-amber-200 dark:border-amber-900/30"
