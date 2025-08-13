@@ -1,1 +1,4 @@
 project_id = "tqlcnvdraewntjlwwhzw"
+
+[functions.emergency-analyze]
+verify_jwt = false

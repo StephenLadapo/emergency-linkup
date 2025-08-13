@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AudioRecorderProps {
   onSoundDetectionChange?: (isActive: boolean) => void;
@@ -37,6 +38,10 @@ const AudioRecorder = ({ onSoundDetectionChange }: AudioRecorderProps) => {
   const audioAnalyserRef = useRef<AnalyserNode | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const detectionMediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const detectionStreamRef = useRef<MediaStream | null>(null);
+  const lastAlertRef = useRef<number>(0);
+  const inFlightRef = useRef<boolean>(false);
   
   useEffect(() => {
     // Load saved sound patterns from localStorage
@@ -156,12 +161,8 @@ const AudioRecorder = ({ onSoundDetectionChange }: AudioRecorderProps) => {
   };
   
   const startSoundAnalysis = async () => {
-    if (savedPatterns.length === 0) {
-      toast.error('No sound patterns saved to match against. Please record and save patterns first.');
-      setSoundDetectionActive(false);
-      return;
-    }
-    
+    // Proceed with real-time voice analysis
+
     try {
       setAnalysingAudio(true);
       
@@ -178,31 +179,64 @@ const AudioRecorder = ({ onSoundDetectionChange }: AudioRecorderProps) => {
       
       audioAnalyserRef.current.fftSize = 2048;
       
-      // Here we would implement the actual sound pattern recognition algorithm
-      // For this demo, we're simulating detection with setTimeout
-      
-      // Simulating sound match detection
-      const randomDetectionTime = Math.floor(Math.random() * 20000) + 10000; // Random time between 10-30 seconds
-      
-      setTimeout(() => {
-        if (soundDetectionActive) {
-          const randomPattern = savedPatterns[Math.floor(Math.random() * savedPatterns.length)];
-          
-          // Add to history
-          addToHistory('emergency', `Detected emergency sound pattern: ${randomPattern.name}`, 'pending');
-          
-          toast.error(`Emergency sound detected: ${randomPattern.name}`, {
-            duration: 10000,
-            action: {
-              label: "Alert Emergency Services",
-              onClick: () => {
-                toast.success("Emergency services alerted!");
-                addToHistory('emergency', `Emergency alert sent for detected sound: ${randomPattern.name}`, 'resolved');
-              }
-            }
+      // Real-time emergency voice detection using edge function
+      const mimeType = 'audio/webm';
+      const blobToBase64 = (blob: Blob): Promise<string> => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const res = reader.result as string;
+          resolve((res.split(',')[1]) || '');
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      detectionStreamRef.current = stream;
+      try {
+        detectionMediaRecorderRef.current = new MediaRecorder(stream, { mimeType });
+      } catch (e) {
+        // Fallback if mimeType unsupported
+        detectionMediaRecorderRef.current = new MediaRecorder(stream);
+      }
+
+      detectionMediaRecorderRef.current.ondataavailable = async (e) => {
+        if (!soundDetectionActive) return;
+        if (!e.data || e.data.size < 1024) return; // ignore tiny chunks
+        if (inFlightRef.current) return;
+        inFlightRef.current = true;
+
+        try {
+          const base64 = await blobToBase64(e.data);
+          const { data, error } = await supabase.functions.invoke('emergency-analyze', {
+            body: { audio: base64, mimeType: e.data.type || mimeType },
           });
+          if (error) {
+            console.error('Emergency analyze error:', error);
+            return;
+          }
+          if (data?.is_emergency) {
+            const now = Date.now();
+            if (now - (lastAlertRef.current || 0) > 30000) {
+              lastAlertRef.current = now;
+              const matched = Array.isArray(data.matched_keywords) ? data.matched_keywords.join(', ') : undefined;
+              addToHistory(
+                'emergency',
+                `Emergency voice detected${matched ? ` (${matched})` : ''}${data?.confidence ? ` [confidence: ${Math.round((data.confidence as number) * 100)}%]` : ''}`,
+                'sent'
+              );
+              toast.success(`Emergency detected and alert sent${data?.transcript ? `: ${data.transcript}` : ''}`, {
+                duration: 10000,
+              });
+            }
+          }
+        } catch (err) {
+          console.error('Chunk analysis failed:', err);
+        } finally {
+          inFlightRef.current = false;
         }
-      }, randomDetectionTime);
+      };
+
+      detectionMediaRecorderRef.current.start(5000); // analyze every 5s
     } catch (err) {
       console.error('Error accessing microphone for sound analysis:', err);
       toast.error('Could not access microphone for sound detection.');
@@ -214,9 +248,20 @@ const AudioRecorder = ({ onSoundDetectionChange }: AudioRecorderProps) => {
   const stopSoundAnalysis = () => {
     setAnalysingAudio(false);
     
+    // Stop detection recorder and stream
+    if (detectionMediaRecorderRef.current && detectionMediaRecorderRef.current.state !== 'inactive') {
+      try { detectionMediaRecorderRef.current.stop(); } catch (_) {}
+      detectionMediaRecorderRef.current = null;
+    }
+    if (detectionStreamRef.current) {
+      try { detectionStreamRef.current.getTracks().forEach(t => t.stop()); } catch (_) {}
+      detectionStreamRef.current = null;
+    }
+
     // Clean up any audio analysis resources
     if (audioSourceRef.current) {
       audioSourceRef.current.disconnect();
+      audioSourceRef.current = null;
     }
     
     if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
@@ -463,7 +508,6 @@ const AudioRecorder = ({ onSoundDetectionChange }: AudioRecorderProps) => {
             <Button 
               variant={soundDetectionActive ? "destructive" : "outline"} 
               onClick={toggleSoundDetection}
-              disabled={savedPatterns.length === 0}
               className="ml-2"
             >
               {soundDetectionActive ? (
@@ -491,11 +535,6 @@ const AudioRecorder = ({ onSoundDetectionChange }: AudioRecorderProps) => {
             </div>
           )}
           
-          {savedPatterns.length === 0 && (
-            <div className="text-sm p-2 bg-muted rounded-md">
-              <p>You need to save at least one sound pattern before activating detection.</p>
-            </div>
-          )}
           
           {soundDetectionActive && (
             <div className="text-sm p-2 bg-amber-100 dark:bg-amber-900/10 rounded-md">
