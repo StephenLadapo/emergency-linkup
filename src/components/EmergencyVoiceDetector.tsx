@@ -50,7 +50,7 @@ const EmergencyVoiceDetector: React.FC<EmergencyVoiceDetectorProps> = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
-  const intervalRef = useRef<number | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastProcessTimeRef = useRef<number>(0);
   
   // API configuration
@@ -329,7 +329,8 @@ const EmergencyVoiceDetector: React.FC<EmergencyVoiceDetectorProps> = ({
           noiseSuppression: true,      // Keep noise suppression
           autoGainControl: true,       // Keep auto gain
           sampleRate: { ideal: 22050 },// Match model's sample rate
-          channelCount: 1              // Mono audio (simpler processing)
+          channelCount: 1,             // Mono audio (simpler processing)
+          latency: 0.01                // Low latency for real-time processing
         } 
       });
       
@@ -396,7 +397,7 @@ const EmergencyVoiceDetector: React.FC<EmergencyVoiceDetectorProps> = ({
       
       // Set up continuous processing with more responsive timing
       if (continuousMode) {
-        intervalRef.current = window.setInterval(() => {
+        intervalRef.current = setInterval(() => {
           if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
             console.log('Stopping recorder to process chunk...');
             mediaRecorderRef.current.stop();
@@ -423,7 +424,7 @@ const EmergencyVoiceDetector: React.FC<EmergencyVoiceDetectorProps> = ({
   // Stop listening
   const stopListening = () => {
     if (intervalRef.current) {
-      window.clearInterval(intervalRef.current);
+      clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
     

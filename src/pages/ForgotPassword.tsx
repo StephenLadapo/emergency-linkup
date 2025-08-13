@@ -1,97 +1,43 @@
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Mail } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { supabase } from '@/integrations/supabase/client';
-import emailjs from '@emailjs/browser';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [codeSent, setCodeSent] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
-  const [codeInput, setCodeInput] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (!email.endsWith('@myturf.ul.ac.za')) {
       toast.error('Please use your university email (@myturf.ul.ac.za)');
       return;
     }
-
+    
     setLoading(true);
-
+    
     try {
-      // Generate 5 different 6-digit codes and pick one randomly
-      const codes = Array.from({ length: 5 }, () => Math.floor(100000 + Math.random() * 900000).toString());
-      const selected = codes[Math.floor(Math.random() * codes.length)];
-      setVerificationCode(selected);
-
-      // Send verification code via EmailJS (IDs provided by you)
-      const templateParams = {
-        to_email: email,
-        to_name: 'Student',
-        message: `Your password reset verification code is ${selected}. It expires in 10 minutes.`,
-        verification_code: selected,
-      } as Record<string, any>;
-
-      await emailjs.send(
-        'service_nxrtqmg',
-        'template_ul3y2jg',
-        templateParams,
-        'HKBvKEggaLSqOOTUt'
-      );
-
-      setCodeSent(true);
-      toast.success('Verification code sent to your email');
-    } catch (error) {
-      console.error('EmailJS send error:', error);
-      toast.error('Failed to send verification code. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyAndReset = async () => {
-    if (!verificationCode || codeInput.trim() !== verificationCode) {
-      toast.error('Incorrect verification code');
-      return;
-    }
-
-    setLoading(true);
-    try {
+      // Send Supabase password reset email
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
-      if (error) throw error;
-      setSubmitted(true);
-      toast.success('Verified! Password reset link sent to your email');
 
-      // Optional: notify user via EmailJS that a reset link has been sent
-      try {
-        await emailjs.send(
-          'service_nxrtqmg',
-          'template_ul3y2jg',
-          {
-            to_email: email,
-            to_name: 'Student',
-            message: 'Your verification was successful. A password reset link has been sent to your university email.',
-          },
-          'HKBvKEggaLSqOOTUt'
-        );
-      } catch (notifyErr) {
-        console.warn('Optional notification email failed:', notifyErr);
-      }
+      if (error) throw error;
+
+      setSubmitted(true);
+      toast.success('Password reset link sent to your email');
     } catch (error) {
       console.error('Password reset error:', error);
-      toast.error('Failed to send reset link. Please try again.');
+      toast.error('Failed to send password reset email. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -99,7 +45,6 @@ const ForgotPassword = () => {
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
-      {/* Background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-900/70 to-amber-700/70 mix-blend-multiply"></div>
         <img 
@@ -108,10 +53,9 @@ const ForgotPassword = () => {
           className="w-full h-full object-cover"
         />
       </div>
-
+      
       <div className="z-10 w-full max-w-md">
         <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-xl p-8 shadow-2xl border border-amber-200 dark:border-amber-900/30">
-          {/* Header */}
           <div className="flex flex-col items-center space-y-2 text-center mb-8">
             <Logo className="mb-4" />
             <h1 className="text-3xl font-bold text-gradient-primary">Forgot Password</h1>
@@ -119,10 +63,9 @@ const ForgotPassword = () => {
               Enter your university email to receive password reset instructions
             </p>
           </div>
-
-          {/* Content */}
+          
           {!submitted ? (
-            !codeSent ? (
+            <>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">University Email</Label>
@@ -141,43 +84,16 @@ const ForgotPassword = () => {
                     </div>
                   </div>
                 </div>
-
+                
                 <Button 
-                  type="submit"
                   className="w-full mt-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700" 
+                  onClick={handleSubmit} 
                   disabled={loading}
                 >
-                  {loading ? 'Processing...' : 'Send Verification Code'}
+                  {loading ? 'Processing...' : 'Send Reset Link'}
                 </Button>
               </form>
-            ) : (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="code">Enter Verification Code</Label>
-                  <Input
-                    id="code"
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    placeholder="e.g. 123456"
-                    value={codeInput}
-                    onChange={(e) => setCodeInput(e.target.value)}
-                    className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-amber-200 dark:border-amber-900/30"
-                    required
-                  />
-                </div>
-                <Button 
-                  onClick={handleVerifyAndReset}
-                  className="w-full mt-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
-                  disabled={loading || codeInput.length < 6}
-                >
-                  {loading ? 'Verifying...' : 'Verify & Send Reset Link'}
-                </Button>
-                <p className="text-sm text-muted-foreground text-center">
-                  A 6-digit code was sent to <span className="font-medium">{email}</span>.
-                </p>
-              </div>
-            )
+            </>
           ) : (
             <div className="pt-6 pb-8 text-center space-y-4">
               <div className="mx-auto bg-green-100 text-green-800 rounded-full w-16 h-16 flex items-center justify-center mb-4">
@@ -192,8 +108,7 @@ const ForgotPassword = () => {
               </p>
             </div>
           )}
-
-          {/* Footer */}
+          
           <div className="mt-6 text-center text-sm">
             <Link to="/login" className="underline text-primary">
               Back to Login
