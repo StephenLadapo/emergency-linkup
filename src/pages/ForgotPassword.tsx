@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from 'sonner';
 import { Mail } from 'lucide-react';
 import Logo from '@/components/Logo';
+import { supabase } from '@/integrations/supabase/client';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -25,11 +26,15 @@ const ForgotPassword = () => {
     setLoading(true);
     
     try {
-      // Simulate API call for password reset
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      // Send Supabase password reset email
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
       setSubmitted(true);
-      toast.success('Password reset instructions sent to your email');
+      toast.success('Password reset link sent to your email');
     } catch (error) {
       console.error('Password reset error:', error);
       toast.error('Failed to send password reset email. Please try again.');
