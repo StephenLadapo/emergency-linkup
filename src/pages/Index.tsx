@@ -160,10 +160,10 @@ const Index = () => {
         </section>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16 animate-fade-in delay-1200">
-              <Button size="lg" className="px-10 py-6 text-lg rounded-full shadow-2xl hover:shadow-3xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 border border-amber-300/30 hover-scale transition-all duration-300 font-semibold" onClick={() => navigate('/register')}>
+              <Button size="lg" className="px-10 py-6 text-lg rounded-full shadow-2xl hover:shadow-3xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 border border-amber-300/30 hover-scale transition-all duration-300 font-semibold" onClick={() => navigate('/auth')}>
                 Register with University Email
               </Button>
-              <Button size="lg" className="px-10 py-6 text-lg rounded-full shadow-2xl hover:shadow-3xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border border-blue-300/30 hover-scale transition-all duration-300 font-semibold" onClick={() => navigate('/login')}>
+              <Button size="lg" className="px-10 py-6 text-lg rounded-full shadow-2xl hover:shadow-3xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border border-blue-300/30 hover-scale transition-all duration-300 font-semibold" onClick={() => navigate('/auth')}>
                 Login to Your Account
               </Button>
             </div>

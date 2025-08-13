@@ -1,274 +1,227 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { PlusCircle, X, Phone, Mail, UserPlus, Shield, User } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { useEffect } from 'react';
+import { PlusCircle, X, Phone, Mail, MapPin, UserPlus, Shield, User } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 type EmergencyContact = {
-  id: string;
+  id: number;
   name: string;
   relation: string;
   phone: string;
   email?: string;
-  is_primary?: boolean;
+  isPrimary?: boolean;
 };
 
 type MedicalInfo = {
-  blood_type: string;
+  bloodType: string;
   allergies: string;
   conditions: string;
   medications: string;
-  medical_aid_number?: string;
-  medical_aid_provider?: string;
-  doctor_name?: string;
-  doctor_contact?: string;
+  medicalAidNumber?: string;
+  medicalAidProvider?: string;
+  doctorName?: string;
+  doctorContact?: string;
 };
 
-type ProfileData = {
-  id?: string;
-  full_name: string;
-  email?: string;
-  student_id?: string;
-  phone?: string;
+type UserData = {
+  name: string;
+  email: string;
+  studentNumber?: string;
+  phoneNumber?: string;
   address?: string;
   faculty?: string;
-  year_of_study?: string;
-  medical_info?: MedicalInfo;
-  emergency_contacts: EmergencyContact[];
+  yearOfStudy?: string;
+  medicalInfo: MedicalInfo;
+  emergencyContacts: EmergencyContact[];
 };
 
 const UserProfile = () => {
-  const { user } = useAuth();
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [newContact, setNewContact] = useState<Omit<EmergencyContact, 'id'>>({
+  const [newContact, setNewContact] = useState<EmergencyContact>({
+    id: 0,
     name: '',
     relation: '',
     phone: '',
     email: '',
-    is_primary: false
+    isPrimary: false
   });
   const [showAddContact, setShowAddContact] = useState(false);
-
-  // Initialize medical info with default values
-  const initializeMedicalInfo = (): MedicalInfo => ({
-    blood_type: '',
-    allergies: '',
-    conditions: '',
-    medications: '',
-    medical_aid_number: '',
-    medical_aid_provider: '',
-    doctor_name: '',
-    doctor_contact: ''
-  });
-
-  // Fetch profile data from Supabase
-  const fetchProfile = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // Fetch profile data
-      const { data: profileData, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error);
-        throw error;
-      }
-
-      if (!profileData) {
-        // Create profile if it doesn't exist - this should be handled by the trigger
-        const { data: newProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: user.id,
-            full_name: user.user_metadata?.full_name || '',
-            student_id: user.user_metadata?.student_id || '',
-            role: 'student'
-          })
-          .select()
-          .single();
-
-        if (createError) {
-          console.error('Error creating profile:', createError);
-          throw createError;
-        }
-
-        setProfile({
-          ...newProfile,
-          email: user.email,
-          address: '',
-          faculty: '',
-          year_of_study: '',
-          medical_info: initializeMedicalInfo(),
-          emergency_contacts: []
-        });
-      } else {
-        // Load stored medical info and contacts from localStorage as fallback
-        const storedMedical = localStorage.getItem(`medical_info_${user.id}`);
-        const storedContacts = localStorage.getItem(`emergency_contacts_${user.id}`);
-        const storedExtra = localStorage.getItem(`profile_extra_${user.id}`);
-        
-        const extraData = storedExtra ? JSON.parse(storedExtra) : { address: '', faculty: '', year_of_study: '' };
-
-        setProfile({
-          ...profileData,
-          email: user.email,
-          ...extraData,
-          medical_info: storedMedical ? JSON.parse(storedMedical) : initializeMedicalInfo(),
-          emergency_contacts: storedContacts ? JSON.parse(storedContacts) : []
-        });
-      }
-    } catch (error) {
-      console.error('Error in fetchProfile:', error);
-      toast.error('Failed to load profile data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  
   useEffect(() => {
-    fetchProfile();
-  }, [user]);
-
-  const handleUpdateProfile = async () => {
-    if (!user || !profile) return;
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: profile.full_name,
-          student_id: profile.student_id,
-          phone: profile.phone
-        })
-        .eq('user_id', user.id);
-
-      if (error) throw error;
+    // In a real app, this would fetch from a backend API
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
       
-      // Store additional profile data in localStorage temporarily
-      localStorage.setItem(`profile_extra_${user.id}`, JSON.stringify({
-        address: profile.address,
-        faculty: profile.faculty,
-        year_of_study: profile.year_of_study
-      }));
+      // Initialize medical info if not present
+      if (!userData.medicalInfo) {
+        userData.medicalInfo = {
+          bloodType: '',
+          allergies: '',
+          conditions: '',
+          medications: '',
+          medicalAidNumber: '',
+          medicalAidProvider: '',
+          doctorName: '',
+          doctorContact: ''
+        };
+      }
+      
+      // Initialize emergency contacts if not present
+      if (!userData.emergencyContacts) {
+        userData.emergencyContacts = [];
+      }
+      
+      setUser(userData);
+    }
+    setLoading(false);
+  }, []);
+  
+  const handleUpdateProfile = () => {
+    // In a real app, this would send to a backend API
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      // Add to history
+      addToHistory('profile', 'Profile information updated');
       
       toast.success('Profile updated successfully!');
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
     }
   };
-
-  const handleUpdateMedical = async () => {
-    if (!user || !profile?.medical_info) return;
-
-    try {
-      // Store medical info in localStorage temporarily
-      localStorage.setItem(`medical_info_${user.id}`, JSON.stringify(profile.medical_info));
+  
+  const handleUpdateMedical = () => {
+    // In a real app, this would send to a backend API
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      // Add to history
+      addToHistory('profile', 'Medical information updated');
+      
       toast.success('Medical information updated successfully!');
-    } catch (error) {
-      console.error('Error updating medical info:', error);
-      toast.error('Failed to update medical information');
     }
   };
-
-  const handleAddContact = async () => {
+  
+  const handleAddContact = () => {
+    if (!user) return;
+    
     if (!newContact.name || !newContact.phone) {
       toast.error('Please provide at least a name and phone number.');
       return;
     }
-
-    if (!user || !profile) return;
-
-    try {
-      const newContactWithId = {
+    
+    const updatedContacts = [
+      ...user.emergencyContacts,
+      {
         ...newContact,
-        id: Date.now().toString()
+        id: user.emergencyContacts.length + 1
+      }
+    ];
+    
+    setUser({
+      ...user,
+      emergencyContacts: updatedContacts
+    });
+    
+    localStorage.setItem('user', JSON.stringify({
+      ...user,
+      emergencyContacts: updatedContacts
+    }));
+    
+    // Add to history
+    addToHistory('contact', `Emergency contact ${newContact.name} added`);
+    
+    setNewContact({
+      id: 0,
+      name: '',
+      relation: '',
+      phone: '',
+      email: '',
+      isPrimary: false
+    });
+    
+    setShowAddContact(false);
+    
+    toast.success('Emergency contact added successfully!');
+  };
+  
+  const handleRemoveContact = (id: number) => {
+    if (!user) return;
+    
+    const contactToRemove = user.emergencyContacts.find(c => c.id === id);
+    const updatedContacts = user.emergencyContacts.filter(contact => contact.id !== id);
+    
+    setUser({
+      ...user,
+      emergencyContacts: updatedContacts
+    });
+    
+    localStorage.setItem('user', JSON.stringify({
+      ...user,
+      emergencyContacts: updatedContacts
+    }));
+    
+    // Add to history
+    if (contactToRemove) {
+      addToHistory('contact', `Emergency contact ${contactToRemove.name} removed`);
+    }
+    
+    toast.success('Contact removed successfully!');
+  };
+  
+  const handleSetPrimaryContact = (id: number) => {
+    if (!user) return;
+    
+    const updatedContacts = user.emergencyContacts.map(contact => ({
+      ...contact,
+      isPrimary: contact.id === id
+    }));
+    
+    setUser({
+      ...user,
+      emergencyContacts: updatedContacts
+    });
+    
+    localStorage.setItem('user', JSON.stringify({
+      ...user,
+      emergencyContacts: updatedContacts
+    }));
+    
+    const primaryContact = updatedContacts.find(c => c.id === id);
+    
+    // Add to history
+    if (primaryContact) {
+      addToHistory('contact', `Set ${primaryContact.name} as primary emergency contact`);
+    }
+    
+    toast.success('Primary contact updated!');
+  };
+  
+  // Function to add events to user history
+  const addToHistory = (type: string, description: string) => {
+    try {
+      const now = new Date();
+      const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      
+      const historyItem = {
+        id: Date.now(),
+        type,
+        timestamp: formattedDate,
+        description
       };
-
-      const updatedContacts = [...profile.emergency_contacts, newContactWithId];
       
-      // Store contacts in localStorage temporarily
-      localStorage.setItem(`emergency_contacts_${user.id}`, JSON.stringify(updatedContacts));
-
-      setProfile({
-        ...profile,
-        emergency_contacts: updatedContacts
-      });
-
-      setNewContact({
-        name: '',
-        relation: '',
-        phone: '',
-        email: '',
-        is_primary: false
-      });
-
-      setShowAddContact(false);
-      toast.success('Emergency contact added successfully!');
+      const userHistory = JSON.parse(localStorage.getItem('userHistory') || '[]');
+      userHistory.unshift(historyItem);
+      localStorage.setItem('userHistory', JSON.stringify(userHistory));
     } catch (error) {
-      console.error('Error adding contact:', error);
-      toast.error('Failed to add emergency contact');
-    }
-  };
-
-  const handleRemoveContact = async (id: string) => {
-    if (!user || !profile) return;
-
-    try {
-      const updatedContacts = profile.emergency_contacts.filter(contact => contact.id !== id);
-      
-      // Store updated contacts in localStorage
-      localStorage.setItem(`emergency_contacts_${user.id}`, JSON.stringify(updatedContacts));
-
-      setProfile({
-        ...profile,
-        emergency_contacts: updatedContacts
-      });
-
-      toast.success('Contact removed successfully!');
-    } catch (error) {
-      console.error('Error removing contact:', error);
-      toast.error('Failed to remove contact');
-    }
-  };
-
-  const handleSetPrimaryContact = async (id: string) => {
-    if (!user || !profile) return;
-
-    try {
-      const updatedContacts = profile.emergency_contacts.map(contact => ({
-        ...contact,
-        is_primary: contact.id === id
-      }));
-
-      // Store updated contacts in localStorage
-      localStorage.setItem(`emergency_contacts_${user.id}`, JSON.stringify(updatedContacts));
-
-      setProfile({
-        ...profile,
-        emergency_contacts: updatedContacts
-      });
-
-      toast.success('Primary contact updated!');
-    } catch (error) {
-      console.error('Error updating primary contact:', error);
-      toast.error('Failed to update primary contact');
+      console.error('Error adding history item:', error);
     }
   };
   
@@ -276,7 +229,7 @@ const UserProfile = () => {
     return <div className="flex justify-center items-center h-full">Loading...</div>;
   }
   
-  if (!profile) {
+  if (!user) {
     return <div className="text-center">Please login to view your profile.</div>;
   }
   
@@ -306,8 +259,8 @@ const UserProfile = () => {
                   <Label htmlFor="fullName">Full Name</Label>
                   <Input 
                     id="fullName" 
-                    value={profile?.full_name || ''} 
-                    onChange={(e) => setProfile(prev => prev ? { ...prev, full_name: e.target.value } : null)}
+                    value={user.name} 
+                    onChange={(e) => setUser({...user, name: e.target.value})}
                   />
                 </div>
                 
@@ -315,7 +268,7 @@ const UserProfile = () => {
                   <Label htmlFor="email">Email</Label>
                   <Input 
                     id="email" 
-                    value={profile?.email || ''} 
+                    value={user.email} 
                     readOnly 
                     className="bg-muted/20"
                   />
@@ -325,8 +278,8 @@ const UserProfile = () => {
                   <Label htmlFor="studentId">Student ID</Label>
                   <Input 
                     id="studentId" 
-                    value={profile?.student_id || ''}
-                    onChange={(e) => setProfile(prev => prev ? { ...prev, student_id: e.target.value } : null)}
+                    value={user.studentNumber || ''}
+                    onChange={(e) => setUser({...user, studentNumber: e.target.value})}
                     placeholder="Enter your student ID"
                   />
                 </div>
@@ -335,8 +288,8 @@ const UserProfile = () => {
                   <Label htmlFor="phoneNumber">Phone Number</Label>
                   <Input 
                     id="phoneNumber" 
-                    value={profile?.phone || ''}
-                    onChange={(e) => setProfile(prev => prev ? { ...prev, phone: e.target.value } : null)}
+                    value={user.phoneNumber || ''}
+                    onChange={(e) => setUser({...user, phoneNumber: e.target.value})}
                     placeholder="Enter your phone number"
                   />
                 </div>
@@ -345,8 +298,8 @@ const UserProfile = () => {
                   <Label htmlFor="address">Campus Address/Residence</Label>
                   <Input 
                     id="address" 
-                    value={profile?.address || ''}
-                    onChange={(e) => setProfile(prev => prev ? { ...prev, address: e.target.value } : null)}
+                    value={user.address || ''}
+                    onChange={(e) => setUser({...user, address: e.target.value})}
                     placeholder="Enter your campus address"
                   />
                 </div>
@@ -355,8 +308,8 @@ const UserProfile = () => {
                   <Label htmlFor="faculty">Faculty</Label>
                   <Input 
                     id="faculty" 
-                    value={profile?.faculty || ''}
-                    onChange={(e) => setProfile(prev => prev ? { ...prev, faculty: e.target.value } : null)}
+                    value={user.faculty || ''}
+                    onChange={(e) => setUser({...user, faculty: e.target.value})}
                     placeholder="Enter your faculty"
                   />
                 </div>
@@ -365,8 +318,8 @@ const UserProfile = () => {
                   <Label htmlFor="yearOfStudy">Year of Study</Label>
                   <Input 
                     id="yearOfStudy" 
-                    value={profile?.year_of_study || ''}
-                    onChange={(e) => setProfile(prev => prev ? { ...prev, year_of_study: e.target.value } : null)}
+                    value={user.yearOfStudy || ''}
+                    onChange={(e) => setUser({...user, yearOfStudy: e.target.value})}
                     placeholder="Enter your year of study"
                   />
                 </div>
@@ -390,11 +343,11 @@ const UserProfile = () => {
                   <Label htmlFor="bloodType">Blood Type</Label>
                   <Input 
                     id="bloodType" 
-                    value={profile?.medical_info?.blood_type || ''} 
-                    onChange={(e) => setProfile(prev => prev ? {
-                      ...prev, 
-                      medical_info: { ...prev.medical_info!, blood_type: e.target.value }
-                    } : null)}
+                    value={user.medicalInfo.bloodType} 
+                    onChange={(e) => setUser({
+                      ...user, 
+                      medicalInfo: {...user.medicalInfo, bloodType: e.target.value}
+                    })}
                   />
                 </div>
                 
@@ -402,11 +355,11 @@ const UserProfile = () => {
                   <Label htmlFor="medicalAidNumber">Medical Aid Number</Label>
                   <Input 
                     id="medicalAidNumber" 
-                    value={profile?.medical_info?.medical_aid_number || ''} 
-                    onChange={(e) => setProfile(prev => prev ? {
-                      ...prev, 
-                      medical_info: { ...prev.medical_info!, medical_aid_number: e.target.value }
-                    } : null)}
+                    value={user.medicalInfo.medicalAidNumber || ''} 
+                    onChange={(e) => setUser({
+                      ...user, 
+                      medicalInfo: {...user.medicalInfo, medicalAidNumber: e.target.value}
+                    })}
                     placeholder="Optional"
                   />
                 </div>
@@ -415,11 +368,11 @@ const UserProfile = () => {
                   <Label htmlFor="medicalAidProvider">Medical Aid Provider</Label>
                   <Input 
                     id="medicalAidProvider" 
-                    value={profile?.medical_info?.medical_aid_provider || ''} 
-                    onChange={(e) => setProfile(prev => prev ? {
-                      ...prev, 
-                      medical_info: { ...prev.medical_info!, medical_aid_provider: e.target.value }
-                    } : null)}
+                    value={user.medicalInfo.medicalAidProvider || ''} 
+                    onChange={(e) => setUser({
+                      ...user, 
+                      medicalInfo: {...user.medicalInfo, medicalAidProvider: e.target.value}
+                    })}
                     placeholder="Optional"
                   />
                 </div>
@@ -428,11 +381,11 @@ const UserProfile = () => {
                   <Label htmlFor="allergies">Allergies</Label>
                   <Textarea 
                     id="allergies" 
-                    value={profile?.medical_info?.allergies || ''} 
-                    onChange={(e) => setProfile(prev => prev ? {
-                      ...prev, 
-                      medical_info: { ...prev.medical_info!, allergies: e.target.value }
-                    } : null)}
+                    value={user.medicalInfo.allergies} 
+                    onChange={(e) => setUser({
+                      ...user, 
+                      medicalInfo: {...user.medicalInfo, allergies: e.target.value}
+                    })}
                     placeholder="List any allergies, or write 'None' if not applicable"
                   />
                 </div>
@@ -441,11 +394,11 @@ const UserProfile = () => {
                   <Label htmlFor="conditions">Medical Conditions</Label>
                   <Textarea 
                     id="conditions" 
-                    value={profile?.medical_info?.conditions || ''} 
-                    onChange={(e) => setProfile(prev => prev ? {
-                      ...prev, 
-                      medical_info: { ...prev.medical_info!, conditions: e.target.value }
-                    } : null)}
+                    value={user.medicalInfo.conditions} 
+                    onChange={(e) => setUser({
+                      ...user, 
+                      medicalInfo: {...user.medicalInfo, conditions: e.target.value}
+                    })}
                     placeholder="List any medical conditions, or write 'None' if not applicable"
                   />
                 </div>
@@ -454,11 +407,11 @@ const UserProfile = () => {
                   <Label htmlFor="medications">Current Medications</Label>
                   <Textarea 
                     id="medications" 
-                    value={profile?.medical_info?.medications || ''} 
-                    onChange={(e) => setProfile(prev => prev ? {
-                      ...prev, 
-                      medical_info: { ...prev.medical_info!, medications: e.target.value }
-                    } : null)}
+                    value={user.medicalInfo.medications} 
+                    onChange={(e) => setUser({
+                      ...user, 
+                      medicalInfo: {...user.medicalInfo, medications: e.target.value}
+                    })}
                     placeholder="List any medications you are currently taking, or write 'None' if not applicable"
                   />
                 </div>
@@ -467,11 +420,11 @@ const UserProfile = () => {
                   <Label htmlFor="doctorName">Doctor's Name</Label>
                   <Input 
                     id="doctorName" 
-                    value={profile?.medical_info?.doctor_name || ''} 
-                    onChange={(e) => setProfile(prev => prev ? {
-                      ...prev, 
-                      medical_info: { ...prev.medical_info!, doctor_name: e.target.value }
-                    } : null)}
+                    value={user.medicalInfo.doctorName || ''} 
+                    onChange={(e) => setUser({
+                      ...user, 
+                      medicalInfo: {...user.medicalInfo, doctorName: e.target.value}
+                    })}
                     placeholder="Optional"
                   />
                 </div>
@@ -480,11 +433,11 @@ const UserProfile = () => {
                   <Label htmlFor="doctorContact">Doctor's Contact</Label>
                   <Input 
                     id="doctorContact" 
-                    value={profile?.medical_info?.doctor_contact || ''} 
-                    onChange={(e) => setProfile(prev => prev ? {
-                      ...prev, 
-                      medical_info: { ...prev.medical_info!, doctor_contact: e.target.value }
-                    } : null)}
+                    value={user.medicalInfo.doctorContact || ''} 
+                    onChange={(e) => setUser({
+                      ...user, 
+                      medicalInfo: {...user.medicalInfo, doctorContact: e.target.value}
+                    })}
                     placeholder="Optional"
                   />
                 </div>
@@ -567,8 +520,8 @@ const UserProfile = () => {
               )}
               
               <div className="space-y-4">
-                {profile && profile.emergency_contacts.length > 0 ? (
-                  profile.emergency_contacts.map((contact) => (
+                {user.emergencyContacts.length > 0 ? (
+                  user.emergencyContacts.map((contact) => (
                     <div key={contact.id} className="border p-4 rounded-md relative">
                       <div className="absolute top-2 right-2 flex space-x-1">
                         <Button 
@@ -584,7 +537,7 @@ const UserProfile = () => {
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between">
                         <div className="font-medium text-lg mb-1">{contact.name}</div>
                         <div>
-                          {contact.is_primary ? (
+                          {contact.isPrimary ? (
                             <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full dark:bg-green-900/20 dark:text-green-300">
                               Primary Contact
                             </span>
