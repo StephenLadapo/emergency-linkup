@@ -78,6 +78,7 @@ const UserProfile = () => {
     }
 
     try {
+      // Fetch profile data
       const { data: profileData, error } = await supabase
         .from('profiles')
         .select('*')
@@ -90,7 +91,7 @@ const UserProfile = () => {
       }
 
       if (!profileData) {
-        // Create profile if it doesn't exist
+        // Create profile if it doesn't exist - this should be handled by the trigger
         const { data: newProfile, error: createError } = await supabase
           .from('profiles')
           .insert({
@@ -110,15 +111,26 @@ const UserProfile = () => {
         setProfile({
           ...newProfile,
           email: user.email,
+          address: '',
+          faculty: '',
+          year_of_study: '',
           medical_info: initializeMedicalInfo(),
           emergency_contacts: []
         });
       } else {
+        // Load stored medical info and contacts from localStorage as fallback
+        const storedMedical = localStorage.getItem(`medical_info_${user.id}`);
+        const storedContacts = localStorage.getItem(`emergency_contacts_${user.id}`);
+        const storedExtra = localStorage.getItem(`profile_extra_${user.id}`);
+        
+        const extraData = storedExtra ? JSON.parse(storedExtra) : { address: '', faculty: '', year_of_study: '' };
+
         setProfile({
           ...profileData,
           email: user.email,
-          medical_info: initializeMedicalInfo(),
-          emergency_contacts: []
+          ...extraData,
+          medical_info: storedMedical ? JSON.parse(storedMedical) : initializeMedicalInfo(),
+          emergency_contacts: storedContacts ? JSON.parse(storedContacts) : []
         });
       }
     } catch (error) {
@@ -147,6 +159,14 @@ const UserProfile = () => {
         .eq('user_id', user.id);
 
       if (error) throw error;
+      
+      // Store additional profile data in localStorage temporarily
+      localStorage.setItem(`profile_extra_${user.id}`, JSON.stringify({
+        address: profile.address,
+        faculty: profile.faculty,
+        year_of_study: profile.year_of_study
+      }));
+      
       toast.success('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -155,62 +175,101 @@ const UserProfile = () => {
   };
 
   const handleUpdateMedical = async () => {
-    toast.success('Medical information saved locally!');
+    if (!user || !profile?.medical_info) return;
+
+    try {
+      // Store medical info in localStorage temporarily
+      localStorage.setItem(`medical_info_${user.id}`, JSON.stringify(profile.medical_info));
+      toast.success('Medical information updated successfully!');
+    } catch (error) {
+      console.error('Error updating medical info:', error);
+      toast.error('Failed to update medical information');
+    }
   };
 
-  const handleAddContact = () => {
+  const handleAddContact = async () => {
     if (!newContact.name || !newContact.phone) {
       toast.error('Please provide at least a name and phone number.');
       return;
     }
 
-    if (!profile) return;
+    if (!user || !profile) return;
 
-    const newContactWithId = {
-      ...newContact,
-      id: Date.now().toString()
-    };
+    try {
+      const newContactWithId = {
+        ...newContact,
+        id: Date.now().toString()
+      };
 
-    setProfile({
-      ...profile,
-      emergency_contacts: [...profile.emergency_contacts, newContactWithId]
-    });
+      const updatedContacts = [...profile.emergency_contacts, newContactWithId];
+      
+      // Store contacts in localStorage temporarily
+      localStorage.setItem(`emergency_contacts_${user.id}`, JSON.stringify(updatedContacts));
 
-    setNewContact({
-      name: '',
-      relation: '',
-      phone: '',
-      email: '',
-      is_primary: false
-    });
+      setProfile({
+        ...profile,
+        emergency_contacts: updatedContacts
+      });
 
-    setShowAddContact(false);
-    toast.success('Emergency contact added successfully!');
+      setNewContact({
+        name: '',
+        relation: '',
+        phone: '',
+        email: '',
+        is_primary: false
+      });
+
+      setShowAddContact(false);
+      toast.success('Emergency contact added successfully!');
+    } catch (error) {
+      console.error('Error adding contact:', error);
+      toast.error('Failed to add emergency contact');
+    }
   };
 
-  const handleRemoveContact = (id: string) => {
-    if (!profile) return;
+  const handleRemoveContact = async (id: string) => {
+    if (!user || !profile) return;
 
-    setProfile({
-      ...profile,
-      emergency_contacts: profile.emergency_contacts.filter(contact => contact.id !== id)
-    });
+    try {
+      const updatedContacts = profile.emergency_contacts.filter(contact => contact.id !== id);
+      
+      // Store updated contacts in localStorage
+      localStorage.setItem(`emergency_contacts_${user.id}`, JSON.stringify(updatedContacts));
 
-    toast.success('Contact removed successfully!');
+      setProfile({
+        ...profile,
+        emergency_contacts: updatedContacts
+      });
+
+      toast.success('Contact removed successfully!');
+    } catch (error) {
+      console.error('Error removing contact:', error);
+      toast.error('Failed to remove contact');
+    }
   };
 
-  const handleSetPrimaryContact = (id: string) => {
-    if (!profile) return;
+  const handleSetPrimaryContact = async (id: string) => {
+    if (!user || !profile) return;
 
-    setProfile({
-      ...profile,
-      emergency_contacts: profile.emergency_contacts.map(contact => ({
+    try {
+      const updatedContacts = profile.emergency_contacts.map(contact => ({
         ...contact,
         is_primary: contact.id === id
-      }))
-    });
+      }));
 
-    toast.success('Primary contact updated!');
+      // Store updated contacts in localStorage
+      localStorage.setItem(`emergency_contacts_${user.id}`, JSON.stringify(updatedContacts));
+
+      setProfile({
+        ...profile,
+        emergency_contacts: updatedContacts
+      });
+
+      toast.success('Primary contact updated!');
+    } catch (error) {
+      console.error('Error updating primary contact:', error);
+      toast.error('Failed to update primary contact');
+    }
   };
   
   if (loading) {
