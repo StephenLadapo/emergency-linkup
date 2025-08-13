@@ -1,354 +1,588 @@
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
-import { User, Phone, Shield, Heart, Users } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { PlusCircle, X, Phone, Mail, MapPin, UserPlus, Shield, User } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
-interface Profile {
-  id: string;
-  user_id: string;
-  full_name: string;
-  phone: string | null;
-  student_id: string | null;
-  role: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface EmergencyContact {
+type EmergencyContact = {
+  id: number;
   name: string;
-  relationship: string;
+  relation: string;
   phone: string;
   email?: string;
-}
+  isPrimary?: boolean;
+};
 
-interface MedicalInfo {
+type MedicalInfo = {
   bloodType: string;
   allergies: string;
   conditions: string;
   medications: string;
-}
+  medicalAidNumber?: string;
+  medicalAidProvider?: string;
+  doctorName?: string;
+  doctorContact?: string;
+};
+
+type UserData = {
+  name: string;
+  email: string;
+  studentNumber?: string;
+  phoneNumber?: string;
+  address?: string;
+  faculty?: string;
+  yearOfStudy?: string;
+  medicalInfo: MedicalInfo;
+  emergencyContacts: EmergencyContact[];
+};
 
 const UserProfile = () => {
-  const { user } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  
-  // Form states
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [studentId, setStudentId] = useState('');
-  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([
-    { name: '', relationship: '', phone: '', email: '' }
-  ]);
-  const [medicalInfo, setMedicalInfo] = useState<MedicalInfo>({
-    bloodType: '',
-    allergies: '',
-    conditions: '',
-    medications: ''
+  const [newContact, setNewContact] = useState<EmergencyContact>({
+    id: 0,
+    name: '',
+    relation: '',
+    phone: '',
+    email: '',
+    isPrimary: false
   });
-
-  // Fetch user profile
+  const [showAddContact, setShowAddContact] = useState(false);
+  
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user) return;
+    // In a real app, this would fetch from a backend API
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
       
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        if (error) {
-          if (error.code !== 'PGRST116') { // Not found error
-            console.error('Error fetching profile:', error);
-            toast.error('Failed to load profile');
-          }
-          return;
-        }
-
-        setProfile(data);
-        setFullName(data.full_name || '');
-        setPhone(data.phone || '');
-        setStudentId(data.student_id || '');
-        
-        // Load saved emergency contacts and medical info from localStorage for now
-        // In a full implementation, these would be separate tables
-        const savedContacts = localStorage.getItem(`emergency_contacts_${user.id}`);
-        if (savedContacts) {
-          setEmergencyContacts(JSON.parse(savedContacts));
-        }
-        
-        const savedMedical = localStorage.getItem(`medical_info_${user.id}`);
-        if (savedMedical) {
-          setMedicalInfo(JSON.parse(savedMedical));
-        }
-        
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-        toast.error('Failed to load profile');
-      } finally {
-        setLoading(false);
+      // Initialize medical info if not present
+      if (!userData.medicalInfo) {
+        userData.medicalInfo = {
+          bloodType: '',
+          allergies: '',
+          conditions: '',
+          medications: '',
+          medicalAidNumber: '',
+          medicalAidProvider: '',
+          doctorName: '',
+          doctorContact: ''
+        };
       }
-    };
-
-    fetchProfile();
-  }, [user]);
-
-  const handleSaveProfile = async () => {
-    if (!user) return;
-    
-    setSaving(true);
-    
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: user.id,
-          full_name: fullName,
-          phone: phone,
-          student_id: studentId,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
-
-      // Save emergency contacts and medical info to localStorage
-      // In a full implementation, these would be separate tables
-      localStorage.setItem(`emergency_contacts_${user.id}`, JSON.stringify(emergencyContacts));
-      localStorage.setItem(`medical_info_${user.id}`, JSON.stringify(medicalInfo));
-
+      
+      // Initialize emergency contacts if not present
+      if (!userData.emergencyContacts) {
+        userData.emergencyContacts = [];
+      }
+      
+      setUser(userData);
+    }
+    setLoading(false);
+  }, []);
+  
+  const handleUpdateProfile = () => {
+    // In a real app, this would send to a backend API
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      // Add to history
+      addToHistory('profile', 'Profile information updated');
+      
       toast.success('Profile updated successfully!');
-      
-      // Refetch profile to get updated data
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (data) {
-        setProfile(data);
-      }
-      
-    } catch (error: any) {
-      console.error('Error updating profile:', error);
-      toast.error(error.message || 'Failed to update profile');
-    } finally {
-      setSaving(false);
     }
   };
-
-  const addEmergencyContact = () => {
-    setEmergencyContacts([...emergencyContacts, { name: '', relationship: '', phone: '', email: '' }]);
+  
+  const handleUpdateMedical = () => {
+    // In a real app, this would send to a backend API
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      // Add to history
+      addToHistory('profile', 'Medical information updated');
+      
+      toast.success('Medical information updated successfully!');
+    }
   };
-
-  const removeEmergencyContact = (index: number) => {
-    setEmergencyContacts(emergencyContacts.filter((_, i) => i !== index));
+  
+  const handleAddContact = () => {
+    if (!user) return;
+    
+    if (!newContact.name || !newContact.phone) {
+      toast.error('Please provide at least a name and phone number.');
+      return;
+    }
+    
+    const updatedContacts = [
+      ...user.emergencyContacts,
+      {
+        ...newContact,
+        id: user.emergencyContacts.length + 1
+      }
+    ];
+    
+    setUser({
+      ...user,
+      emergencyContacts: updatedContacts
+    });
+    
+    localStorage.setItem('user', JSON.stringify({
+      ...user,
+      emergencyContacts: updatedContacts
+    }));
+    
+    // Add to history
+    addToHistory('contact', `Emergency contact ${newContact.name} added`);
+    
+    setNewContact({
+      id: 0,
+      name: '',
+      relation: '',
+      phone: '',
+      email: '',
+      isPrimary: false
+    });
+    
+    setShowAddContact(false);
+    
+    toast.success('Emergency contact added successfully!');
   };
-
-  const updateEmergencyContact = (index: number, field: keyof EmergencyContact, value: string) => {
-    const updated = [...emergencyContacts];
-    updated[index] = { ...updated[index], [field]: value };
-    setEmergencyContacts(updated);
+  
+  const handleRemoveContact = (id: number) => {
+    if (!user) return;
+    
+    const contactToRemove = user.emergencyContacts.find(c => c.id === id);
+    const updatedContacts = user.emergencyContacts.filter(contact => contact.id !== id);
+    
+    setUser({
+      ...user,
+      emergencyContacts: updatedContacts
+    });
+    
+    localStorage.setItem('user', JSON.stringify({
+      ...user,
+      emergencyContacts: updatedContacts
+    }));
+    
+    // Add to history
+    if (contactToRemove) {
+      addToHistory('contact', `Emergency contact ${contactToRemove.name} removed`);
+    }
+    
+    toast.success('Contact removed successfully!');
   };
-
+  
+  const handleSetPrimaryContact = (id: number) => {
+    if (!user) return;
+    
+    const updatedContacts = user.emergencyContacts.map(contact => ({
+      ...contact,
+      isPrimary: contact.id === id
+    }));
+    
+    setUser({
+      ...user,
+      emergencyContacts: updatedContacts
+    });
+    
+    localStorage.setItem('user', JSON.stringify({
+      ...user,
+      emergencyContacts: updatedContacts
+    }));
+    
+    const primaryContact = updatedContacts.find(c => c.id === id);
+    
+    // Add to history
+    if (primaryContact) {
+      addToHistory('contact', `Set ${primaryContact.name} as primary emergency contact`);
+    }
+    
+    toast.success('Primary contact updated!');
+  };
+  
+  // Function to add events to user history
+  const addToHistory = (type: string, description: string) => {
+    try {
+      const now = new Date();
+      const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      
+      const historyItem = {
+        id: Date.now(),
+        type,
+        timestamp: formattedDate,
+        description
+      };
+      
+      const userHistory = JSON.parse(localStorage.getItem('userHistory') || '[]');
+      userHistory.unshift(historyItem);
+      localStorage.setItem('userHistory', JSON.stringify(userHistory));
+    } catch (error) {
+      console.error('Error adding history item:', error);
+    }
+  };
+  
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <div className="flex justify-center items-center h-full">Loading...</div>;
   }
-
+  
+  if (!user) {
+    return <div className="text-center">Please login to view your profile.</div>;
+  }
+  
   return (
     <div className="space-y-6">
-      {/* Basic Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Basic Information
-          </CardTitle>
-          <CardDescription>
-            Update your personal information and contact details.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                id="fullName"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Enter your full name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                value={user?.email || ''}
-                disabled
-                className="bg-muted"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Enter your phone number"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="studentId">Student ID</Label>
-              <Input
-                id="studentId"
-                value={studentId}
-                onChange={(e) => setStudentId(e.target.value)}
-                placeholder="Enter your student ID"
-              />
-            </div>
-          </div>
-          
-          {profile && (
-            <div className="text-sm text-muted-foreground">
-              <p>Role: <span className="font-medium capitalize">{profile.role}</span></p>
-              <p>Account created: {new Date(profile.created_at).toLocaleDateString()}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Emergency Contacts */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Emergency Contacts
-          </CardTitle>
-          <CardDescription>
-            Add people to contact in case of emergency.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {emergencyContacts.map((contact, index) => (
-            <div key={index} className="p-4 border rounded-lg space-y-3">
-              <div className="flex justify-between items-center">
-                <h4 className="font-medium">Contact {index + 1}</h4>
-                {emergencyContacts.length > 1 && (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => removeEmergencyContact(index)}
-                  >
-                    Remove
-                  </Button>
+      <Tabs defaultValue="personal">
+        <TabsList className="w-full grid grid-cols-3 mb-4">
+          <TabsTrigger value="personal" className="flex items-center gap-2">
+            <User className="h-4 w-4" />Personal Info
+          </TabsTrigger>
+          <TabsTrigger value="medical" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />Medical Info
+          </TabsTrigger>
+          <TabsTrigger value="contacts" className="flex items-center gap-2">
+            <Phone className="h-4 w-4" />Emergency Contacts
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="personal" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Personal Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input 
+                    id="fullName" 
+                    value={user.name} 
+                    onChange={(e) => setUser({...user, name: e.target.value})}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input 
+                    id="email" 
+                    value={user.email} 
+                    readOnly 
+                    className="bg-muted/20"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="studentId">Student ID</Label>
+                  <Input 
+                    id="studentId" 
+                    value={user.studentNumber || ''}
+                    onChange={(e) => setUser({...user, studentNumber: e.target.value})}
+                    placeholder="Enter your student ID"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="phoneNumber">Phone Number</Label>
+                  <Input 
+                    id="phoneNumber" 
+                    value={user.phoneNumber || ''}
+                    onChange={(e) => setUser({...user, phoneNumber: e.target.value})}
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+                
+                <div className="col-span-1 md:col-span-2 space-y-2">
+                  <Label htmlFor="address">Campus Address/Residence</Label>
+                  <Input 
+                    id="address" 
+                    value={user.address || ''}
+                    onChange={(e) => setUser({...user, address: e.target.value})}
+                    placeholder="Enter your campus address"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="faculty">Faculty</Label>
+                  <Input 
+                    id="faculty" 
+                    value={user.faculty || ''}
+                    onChange={(e) => setUser({...user, faculty: e.target.value})}
+                    placeholder="Enter your faculty"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="yearOfStudy">Year of Study</Label>
+                  <Input 
+                    id="yearOfStudy" 
+                    value={user.yearOfStudy || ''}
+                    onChange={(e) => setUser({...user, yearOfStudy: e.target.value})}
+                    placeholder="Enter your year of study"
+                  />
+                </div>
+              </div>
+              
+              <Button onClick={handleUpdateProfile} className="w-full">
+                Update Profile
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="medical" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Medical Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bloodType">Blood Type</Label>
+                  <Input 
+                    id="bloodType" 
+                    value={user.medicalInfo.bloodType} 
+                    onChange={(e) => setUser({
+                      ...user, 
+                      medicalInfo: {...user.medicalInfo, bloodType: e.target.value}
+                    })}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="medicalAidNumber">Medical Aid Number</Label>
+                  <Input 
+                    id="medicalAidNumber" 
+                    value={user.medicalInfo.medicalAidNumber || ''} 
+                    onChange={(e) => setUser({
+                      ...user, 
+                      medicalInfo: {...user.medicalInfo, medicalAidNumber: e.target.value}
+                    })}
+                    placeholder="Optional"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="medicalAidProvider">Medical Aid Provider</Label>
+                  <Input 
+                    id="medicalAidProvider" 
+                    value={user.medicalInfo.medicalAidProvider || ''} 
+                    onChange={(e) => setUser({
+                      ...user, 
+                      medicalInfo: {...user.medicalInfo, medicalAidProvider: e.target.value}
+                    })}
+                    placeholder="Optional"
+                  />
+                </div>
+                
+                <div className="col-span-1 md:col-span-2 space-y-2">
+                  <Label htmlFor="allergies">Allergies</Label>
+                  <Textarea 
+                    id="allergies" 
+                    value={user.medicalInfo.allergies} 
+                    onChange={(e) => setUser({
+                      ...user, 
+                      medicalInfo: {...user.medicalInfo, allergies: e.target.value}
+                    })}
+                    placeholder="List any allergies, or write 'None' if not applicable"
+                  />
+                </div>
+                
+                <div className="col-span-1 md:col-span-2 space-y-2">
+                  <Label htmlFor="conditions">Medical Conditions</Label>
+                  <Textarea 
+                    id="conditions" 
+                    value={user.medicalInfo.conditions} 
+                    onChange={(e) => setUser({
+                      ...user, 
+                      medicalInfo: {...user.medicalInfo, conditions: e.target.value}
+                    })}
+                    placeholder="List any medical conditions, or write 'None' if not applicable"
+                  />
+                </div>
+                
+                <div className="col-span-1 md:col-span-2 space-y-2">
+                  <Label htmlFor="medications">Current Medications</Label>
+                  <Textarea 
+                    id="medications" 
+                    value={user.medicalInfo.medications} 
+                    onChange={(e) => setUser({
+                      ...user, 
+                      medicalInfo: {...user.medicalInfo, medications: e.target.value}
+                    })}
+                    placeholder="List any medications you are currently taking, or write 'None' if not applicable"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="doctorName">Doctor's Name</Label>
+                  <Input 
+                    id="doctorName" 
+                    value={user.medicalInfo.doctorName || ''} 
+                    onChange={(e) => setUser({
+                      ...user, 
+                      medicalInfo: {...user.medicalInfo, doctorName: e.target.value}
+                    })}
+                    placeholder="Optional"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="doctorContact">Doctor's Contact</Label>
+                  <Input 
+                    id="doctorContact" 
+                    value={user.medicalInfo.doctorContact || ''} 
+                    onChange={(e) => setUser({
+                      ...user, 
+                      medicalInfo: {...user.medicalInfo, doctorContact: e.target.value}
+                    })}
+                    placeholder="Optional"
+                  />
+                </div>
+              </div>
+              
+              <Button onClick={handleUpdateMedical} className="w-full">
+                Update Medical Info
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="contacts" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Emergency Contacts</CardTitle>
+              {!showAddContact && (
+                <Button variant="outline" onClick={() => setShowAddContact(true)}>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Add Contact
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {showAddContact && (
+                <Card className="border-dashed border-primary/50 bg-primary/5">
+                  <CardContent className="pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="contactName">Name</Label>
+                        <Input 
+                          id="contactName" 
+                          value={newContact.name} 
+                          onChange={(e) => setNewContact({...newContact, name: e.target.value})}
+                          placeholder="Contact Name"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="contactRelation">Relationship</Label>
+                        <Input 
+                          id="contactRelation" 
+                          value={newContact.relation} 
+                          onChange={(e) => setNewContact({...newContact, relation: e.target.value})}
+                          placeholder="e.g. Parent, Sibling, Friend"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="contactPhone">Phone Number</Label>
+                        <Input 
+                          id="contactPhone" 
+                          value={newContact.phone} 
+                          onChange={(e) => setNewContact({...newContact, phone: e.target.value})}
+                          placeholder="Contact Phone Number"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="contactEmail">Email (Optional)</Label>
+                        <Input 
+                          id="contactEmail" 
+                          value={newContact.email || ''} 
+                          onChange={(e) => setNewContact({...newContact, email: e.target.value})}
+                          placeholder="Contact Email"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="flex space-x-2 mt-4">
+                      <Button onClick={handleAddContact} className="flex-1">
+                        Save Contact
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowAddContact(false)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              <div className="space-y-4">
+                {user.emergencyContacts.length > 0 ? (
+                  user.emergencyContacts.map((contact) => (
+                    <div key={contact.id} className="border p-4 rounded-md relative">
+                      <div className="absolute top-2 right-2 flex space-x-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-7 w-7 rounded-full"
+                          onClick={() => handleRemoveContact(contact.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+                        <div className="font-medium text-lg mb-1">{contact.name}</div>
+                        <div>
+                          {contact.isPrimary ? (
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full dark:bg-green-900/20 dark:text-green-300">
+                              Primary Contact
+                            </span>
+                          ) : (
+                            <Button 
+                              variant="link" 
+                              size="sm" 
+                              onClick={() => handleSetPrimaryContact(contact.id)} 
+                              className="text-xs p-0 h-auto"
+                            >
+                              Set as primary
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="text-sm text-muted-foreground mt-1">{contact.relation}</div>
+                      
+                      <div className="mt-3 space-y-1 text-sm">
+                        <div className="flex items-center">
+                          <Phone className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                          <span>{contact.phone}</span>
+                        </div>
+                        
+                        {contact.email && (
+                          <div className="flex items-center">
+                            <Mail className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                            <span>{contact.email}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    <UserPlus className="h-10 w-10 mx-auto mb-2 opacity-20" />
+                    <p>No emergency contacts added yet.</p>
+                    <p className="text-sm">Add contacts who should be notified during emergencies.</p>
+                  </div>
                 )}
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Input
-                  placeholder="Full Name"
-                  value={contact.name}
-                  onChange={(e) => updateEmergencyContact(index, 'name', e.target.value)}
-                />
-                <Input
-                  placeholder="Relationship"
-                  value={contact.relationship}
-                  onChange={(e) => updateEmergencyContact(index, 'relationship', e.target.value)}
-                />
-                <Input
-                  placeholder="Phone Number"
-                  value={contact.phone}
-                  onChange={(e) => updateEmergencyContact(index, 'phone', e.target.value)}
-                />
-                <Input
-                  placeholder="Email (optional)"
-                  value={contact.email}
-                  onChange={(e) => updateEmergencyContact(index, 'email', e.target.value)}
-                />
-              </div>
-            </div>
-          ))}
-          <Button onClick={addEmergencyContact} variant="outline" className="w-full">
-            Add Emergency Contact
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Medical Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Heart className="h-5 w-5" />
-            Medical Information
-          </CardTitle>
-          <CardDescription>
-            Important medical information for emergency responders.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="bloodType">Blood Type</Label>
-              <Input
-                id="bloodType"
-                value={medicalInfo.bloodType}
-                onChange={(e) => setMedicalInfo({ ...medicalInfo, bloodType: e.target.value })}
-                placeholder="e.g., O+, A-, B+"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="allergies">Allergies</Label>
-              <Input
-                id="allergies"
-                value={medicalInfo.allergies}
-                onChange={(e) => setMedicalInfo({ ...medicalInfo, allergies: e.target.value })}
-                placeholder="Food, drug, or other allergies"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="conditions">Medical Conditions</Label>
-            <Textarea
-              id="conditions"
-              value={medicalInfo.conditions}
-              onChange={(e) => setMedicalInfo({ ...medicalInfo, conditions: e.target.value })}
-              placeholder="Any ongoing medical conditions"
-              rows={3}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="medications">Current Medications</Label>
-            <Textarea
-              id="medications"
-              value={medicalInfo.medications}
-              onChange={(e) => setMedicalInfo({ ...medicalInfo, medications: e.target.value })}
-              placeholder="List current medications and dosages"
-              rows={3}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <Button onClick={handleSaveProfile} disabled={saving} size="lg">
-          {saving ? 'Saving...' : 'Save Profile'}
-        </Button>
-      </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
