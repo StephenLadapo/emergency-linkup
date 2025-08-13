@@ -8,7 +8,8 @@ import EmergencyButton from "./EmergencyButton";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useToast } from "./ui/use-toast";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 const DashboardLayout = () => {
   const [unusualSoundDetected, setUnusualSoundDetected] = useState(false);
@@ -17,7 +18,7 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { toast } = useToast();
+  const { user, signOut } = useAuth();
   
   // Redirect to profile page if on the base dashboard path
   useEffect(() => {
@@ -68,13 +69,15 @@ const DashboardLayout = () => {
     setCountdownTime(160);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    toast({
-      title: "Logged out successfully",
-      description: "You have been logged out of your account",
-    });
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success('Logged out successfully');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Error logging out');
+    }
   };
 
   const toggleDarkMode = () => {
