@@ -18,8 +18,8 @@ const ForgotPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email.endsWith('@myturf.ul.ac.za')) {
-      toast.error('Please use your university email (@myturf.ul.ac.za)');
+    if (!email.endsWith('@gmail.com')) {
+      toast.error('Please use your Gmail email (@gmail.com)');
       return;
     }
     
@@ -60,7 +60,7 @@ const ForgotPassword = () => {
             <Logo className="mb-4" />
             <h1 className="text-3xl font-bold text-gradient-primary">Forgot Password</h1>
             <p className="text-muted-foreground">
-              Enter your university email to receive password reset instructions
+              Enter your Gmail email to receive password reset instructions
             </p>
           </div>
           
@@ -68,14 +68,14 @@ const ForgotPassword = () => {
             <>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">University Email</Label>
+                  <Label htmlFor="email">Gmail Email</Label>
                   <div className="flex">
                     <div className="relative flex-grow">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input 
                         id="email"
                         type="email" 
-                        placeholder="yourstudentnumber@myturf.ul.ac.za"
+                        placeholder="yourname@gmail.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-10 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-amber-200 dark:border-amber-900/30"

@@ -60,7 +60,7 @@ const Login = () => {
             <Logo className="mb-4" />
             <h1 className="text-3xl font-bold text-gradient-primary">Welcome Back</h1>
             <p className="text-muted-foreground">
-              Sign in to access the University of Limpopo Emergency System
+              Sign in to access the Emergency System
             </p>
           </div>
           

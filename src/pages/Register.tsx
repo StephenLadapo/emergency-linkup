@@ -75,8 +75,8 @@ const Register = () => {
       return;
     }
     
-    if (!email.endsWith('@myturf.ul.ac.za')) {
-      toast.error('Please use your University of Limpopo email address (@myturf.ul.ac.za)');
+    if (!email.endsWith('@gmail.com')) {
+      toast.error('Please use your Gmail email address (@gmail.com)');
       setLoading(false);
       return;
     }
@@ -139,7 +139,7 @@ const Register = () => {
             <Logo className="mb-4" />
             <h1 className="text-3xl font-bold text-gradient-primary">Create an Account</h1>
             <p className="text-muted-foreground">
-              Sign up to use the University of Limpopo Emergency System
+              Sign up to use the Emergency System
             </p>
           </div>
           
