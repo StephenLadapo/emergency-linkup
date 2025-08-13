@@ -5,6 +5,7 @@ import AuthForm from '@/components/AuthForm';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Logo from '@/components/Logo';
+import { supabase } from '@/integrations/supabase/client';
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -14,30 +15,31 @@ const Login = () => {
     setLoading(true);
     
     try {
-      // Check if the user exists in our users storage
-      const users = JSON.parse(localStorage.getItem('users') || '{}');
-      const user = users[email];
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (user && user.password === password) {
-        // Create a logged in user in localStorage
-        localStorage.setItem('user', JSON.stringify({
-          name: user.name,
-          email,
-          studentNumber: user.studentNumber
-        }));
-        
+      console.log('Attempting login with:', email);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error('Login error:', error);
+        throw error;
+      }
+
+      if (data.user) {
+        console.log('Login successful for:', data.user.email);
         toast.success('Login successful!');
         navigate('/dashboard/profile');
-        return;
-      } else {
-        throw new Error('Invalid credentials');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      toast.error('Login failed. Please check your credentials.');
+      if (error.message.includes('Invalid login credentials')) {
+        toast.error('Invalid email or password. Please check your credentials.');
+      } else if (error.message.includes('Email not confirmed')) {
+        toast.error('Please check your email and click the confirmation link before signing in.');
+      } else {
+        toast.error(error.message || 'Login failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }
@@ -60,7 +62,7 @@ const Login = () => {
             <Logo className="mb-4" />
             <h1 className="text-3xl font-bold text-gradient-primary">Welcome Back</h1>
             <p className="text-muted-foreground">
-              Sign in to access the University of Limpopo Emergency System
+              Sign in to access the Emergency System
             </p>
           </div>
           
