@@ -100,7 +100,12 @@ const Register = () => {
       }
 
       if (data.user) {
-        toast.success('Registration successful! Please check your email to verify your account.');
+        // Check if email confirmation is required
+        if (!data.user.email_confirmed_at && data.user.confirmation_sent_at) {
+          toast.success('Registration successful! Please check your email to verify your account before signing in.');
+        } else {
+          toast.success('Registration successful! You can now sign in.');
+        }
         
         // Send confirmation email via EmailJS
         try {

@@ -15,22 +15,31 @@ const Login = () => {
     setLoading(true);
     
     try {
+      console.log('Attempting login with:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Login error:', error);
         throw error;
       }
 
       if (data.user) {
+        console.log('Login successful for:', data.user.email);
         toast.success('Login successful!');
         navigate('/dashboard/profile');
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.message || 'Login failed. Please check your credentials.');
+      if (error.message.includes('Invalid login credentials')) {
+        toast.error('Invalid email or password. Please check your credentials.');
+      } else if (error.message.includes('Email not confirmed')) {
+        toast.error('Please check your email and click the confirmation link before signing in.');
+      } else {
+        toast.error(error.message || 'Login failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }
