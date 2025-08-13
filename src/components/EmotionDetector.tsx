@@ -131,7 +131,9 @@ const EmotionDetector: React.FC<EmotionDetectorProps> = ({
   // Stop face detection
   const stopDetection = () => {
     if (detectionRef.current) {
-      window.clearTimeout(detectionRef.current);
+      // Clear both setTimeout and cancelAnimationFrame to ensure proper cleanup
+      clearTimeout(detectionRef.current);
+      cancelAnimationFrame(detectionRef.current);
       detectionRef.current = null;
     }
     
