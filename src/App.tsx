@@ -10,7 +10,6 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import EmergencyFlowPage from "./pages/EmergencyFlowPage";
 import NotFound from "./pages/NotFound";
-import ResetPassword from "./pages/ResetPassword";
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import LocationPage from "./pages/dashboard/LocationPage";
@@ -20,9 +19,6 @@ import ProfilePage from "./pages/dashboard/ProfilePage";
 import MessagesPage from "./pages/dashboard/MessagesPage";
 import HistoryPage from "./pages/dashboard/HistoryPage";
 import SettingsPage from "./pages/dashboard/SettingsPage";
-import EmergencyVoiceDemo from "./pages/EmergencyVoiceDemo";
-import EmotionDetectorDemo from "./pages/EmotionDetectorDemo";
-import EmotionScanner from "./pages/EmotionScanner";
 
 const queryClient = new QueryClient();
 
@@ -37,11 +33,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/emergency-flow" element={<EmergencyFlowPage />} />
-          <Route path="/emergency-voice-demo" element={<EmergencyVoiceDemo />} />
-          <Route path="/emotion-detector-demo" element={<EmotionDetectorDemo />} />
-          <Route path="/emotion-scanner" element={<EmotionScanner />} />
           
           {/* Dashboard Routes */}
           <Route path="/dashboard" element={<DashboardLayout />}>

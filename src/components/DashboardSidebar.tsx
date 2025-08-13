@@ -7,8 +7,6 @@ import {
   Bell,
   History,
   Settings,
-  Brain,
-  Smile,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -62,16 +60,6 @@ const menuItems = [
     title: "Settings",
     icon: Settings,
     path: "/dashboard/settings",
-  },
-  {
-    title: "Emergency Voice AI",
-    icon: Brain,
-    path: "/emergency-voice-demo",
-  },
-  {
-    title: "Emotion Detector",
-    icon: Smile,
-    path: "/emotion-detector-demo",
   },
 ];
 
