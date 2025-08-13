@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from 'sonner';
 import { Mail } from 'lucide-react';
 import Logo from '@/components/Logo';
-import emailjs from '@emailjs/browser';
+import { supabase } from '@/integrations/supabase/client';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -26,28 +26,15 @@ const ForgotPassword = () => {
     setLoading(true);
     
     try {
-      // Initialize EmailJS with public key
-      emailjs.init('HKBvKEggaLSqOOTUt');
-      
-      // Generate a temporary reset token (in real app, this would come from backend)
-      const resetToken = Math.random().toString(36).substring(2, 15);
-      const resetLink = `${window.location.origin}/reset-password?token=${resetToken}`;
-      
-      // Send email using EmailJS
-      await emailjs.send(
-        'service_nxrtqmg', // Service ID
-        'template_ul3y2jg', // Template ID
-        {
-          to_name: email.split('@')[0], // Student number
-          to_email: email, // Recipient email
-          from_name: 'EmergencyLinkUp',
-          message: `Please click the following link to reset your password: ${resetLink}`,
-          reset_link: resetLink
-        }
-      );
-      
+      // Send Supabase password reset email
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
       setSubmitted(true);
-      toast.success('Password reset instructions sent to your email');
+      toast.success('Password reset link sent to your email');
     } catch (error) {
       console.error('Password reset error:', error);
       toast.error('Failed to send password reset email. Please try again.');
