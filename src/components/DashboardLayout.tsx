@@ -1,4 +1,3 @@
-
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { LogOut, MapPin, Moon, Sun } from "lucide-react";
 import DashboardSidebar from "./DashboardSidebar";
@@ -9,7 +8,6 @@ import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "./ui/use-toast";
-import ScreenshotProtection from "./ScreenshotProtection";
 import ScreenshotProtection from "./ScreenshotProtection";
 
 const DashboardLayout = () => {
@@ -86,60 +84,57 @@ const DashboardLayout = () => {
   return (
     <>
       <ScreenshotProtection />
-    <>
-      <ScreenshotProtection />
-    <SidebarProvider defaultOpen={true}>
-      <div className="flex w-full min-h-screen">
-        <DashboardSidebar />
-        <SidebarInset className="py-6 px-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center">
-              <SidebarTrigger className="mr-2 lg:hidden" />
-              <h1 className="text-2xl font-bold">Emergency Dashboard</h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={toggleDarkMode} className="rounded-full">
-                {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </Button>
-              <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-full text-red-500">
-                <LogOut className="h-5 w-5" />
-              </Button>
-              <div className="bg-muted/50 p-2 rounded-md text-sm flex items-center">
-                <MapPin className="h-4 w-4 mr-1" />
-                <span>Campus Location Active</span>
+      <SidebarProvider defaultOpen={true}>
+        <div className="flex w-full min-h-screen">
+          <DashboardSidebar />
+          <SidebarInset className="py-6 px-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center">
+                <SidebarTrigger className="mr-2 lg:hidden" />
+                <h1 className="text-2xl font-bold">Emergency Dashboard</h1>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={toggleDarkMode} className="rounded-full">
+                  {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                </Button>
+                <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-full text-red-500">
+                  <LogOut className="h-5 w-5" />
+                </Button>
+                <div className="bg-muted/50 p-2 rounded-md text-sm flex items-center">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  <span>Campus Location Active</span>
+                </div>
               </div>
             </div>
-          </div>
-          
-          {unusualSoundDetected && (
-            <Card className="border-red-500 bg-red-50 dark:bg-red-950/20 shadow-lg animate-pulse mb-6">
-              <CardContent className="p-4 flex flex-col items-center">
-                <h2 className="text-xl font-bold text-red-600 mb-2">Unusual Sound Detected!</h2>
-                <p className="mb-4">Emergency services will be contacted in {countdownTime} seconds if not cancelled.</p>
-                <div className="flex space-x-4">
-                  <button 
-                    onClick={cancelEmergency}
-                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded"
-                  >
-                    False Alarm
-                  </button>
-                  <button 
-                    onClick={confirmEmergency}
-                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                  >
-                    I Need Help
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          <Outlet />
-          <EmergencyButton />
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
-    </>
+            
+            {unusualSoundDetected && (
+              <Card className="border-red-500 bg-red-50 dark:bg-red-950/20 shadow-lg animate-pulse mb-6">
+                <CardContent className="p-4 flex flex-col items-center">
+                  <h2 className="text-xl font-bold text-red-600 mb-2">Unusual Sound Detected!</h2>
+                  <p className="mb-4">Emergency services will be contacted in {countdownTime} seconds if not cancelled.</p>
+                  <div className="flex space-x-4">
+                    <button 
+                      onClick={cancelEmergency}
+                      className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded"
+                    >
+                      False Alarm
+                    </button>
+                    <button 
+                      onClick={confirmEmergency}
+                      className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                    >
+                      I Need Help
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            <Outlet />
+            <EmergencyButton />
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
     </>
   );
 };

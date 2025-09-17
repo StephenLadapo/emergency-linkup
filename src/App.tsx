@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,14 +24,12 @@ import SettingsPage from "./pages/dashboard/SettingsPage";
 import EmergencyVoiceDemo from "./pages/EmergencyVoiceDemo";
 import EmotionDetectorDemo from "./pages/EmotionDetectorDemo";
 import ScreenshotProtection from "./components/ScreenshotProtection";
-import ScreenshotProtection from "./components/ScreenshotProtection";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <ScreenshotProtection />
       <ScreenshotProtection />
       <Toaster />
       <Sonner />

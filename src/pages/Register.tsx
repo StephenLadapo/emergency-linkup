@@ -9,7 +9,6 @@ import { Shield } from "lucide-react";
 import emailjs from '@emailjs/browser';
 import { supabase } from '@/integrations/supabase/client';
 import { createUserProfile, logSecurityEvent } from '@/lib/auth';
-import { createUserProfile, logSecurityEvent } from '@/lib/auth';
 
 // Password requirements
 const PASSWORD_MIN_LENGTH = 8;
@@ -102,25 +101,6 @@ const Register = () => {
       }
 
       if (data.user) {
-        // Create user profile in our custom table
-        try {
-          await createUserProfile(data.user.id, {
-            full_name: fullName || '',
-            student_id: studentNumber || '',
-            email_verified: false, // Will be set to true after email verification
-            two_factor_enabled: false,
-            screenshot_protection: true,
-            session_timeout_minutes: 10,
-            failed_login_attempts: 0
-          });
-          
-          // Log registration event
-          await logSecurityEvent(data.user.id, 'user_registered', 'New user account created');
-        } catch (profileError) {
-          console.error('Error creating user profile:', profileError);
-          // Don't fail registration if profile creation fails
-        }
-        
         // Create user profile in our custom table
         try {
           await createUserProfile(data.user.id, {
