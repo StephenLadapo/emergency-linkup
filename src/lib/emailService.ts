@@ -31,13 +31,13 @@ export const send2FACode = async (email: string, fullName: string, code: string)
       to_name: fullName,
       to_email: email,
       verification_code: code,
-      expiry_time: '10 minutes',
+      expiry_time: '10 minutes', 
       app_name: 'EmergencyLinkUp - University of Limpopo'
     };
 
     await emailjs.send(
       "service_fprjlcl",
-      "template_gu18aiq", // Using existing template
+      "template_gu18aiq",
       templateParams
     );
 
@@ -75,6 +75,28 @@ export const sendEmergencyAlert = async (
     return true;
   } catch (error) {
     console.error('Failed to send emergency alert:', error);
+    throw error;
+  }
+};
+
+export const sendPasswordResetEmail = async (email: string, fullName: string, resetLink: string) => {
+  try {
+    const templateParams = {
+      to_name: fullName,
+      to_email: email,
+      reset_link: resetLink,
+      app_name: 'EmergencyLinkUp - University of Limpopo'
+    };
+
+    await emailjs.send(
+      "service_fprjlcl",
+      "template_password_reset",
+      templateParams
+    );
+
+    return true;
+  } catch (error) {
+    console.error('Failed to send password reset email:', error);
     throw error;
   }
 };

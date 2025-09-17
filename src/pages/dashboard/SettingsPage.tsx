@@ -7,9 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Shield, Clock, Eye, EyeOff } from "lucide-react";
+import { Shield, Clock, Eye, EyeOff, AlertTriangle, CheckCircle } from "lucide-react";
 import TwoFactorAuth from "@/components/TwoFactorAuth";
-import { disable2FA } from "@/lib/auth";
+import { disable2FA, updateSessionTimeout, updateScreenshotProtection } from "@/lib/auth";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const SettingsPage = () => {
   const { user, userProfile, updateProfile } = useAuth();
@@ -58,29 +59,47 @@ const SettingsPage = () => {
   const handleScreenshotProtectionChange = (enabled: boolean) => {
     setScreenshotProtection(enabled);
     
-    // Update in database
-    if (updateProfile) {
-      updateProfile({ screenshot_protection: enabled }).catch((error) => {
+    // Update in database using the auth function
+    if (user) {
+      updateScreenshotProtection(user.id, enabled).then(() => {
+        // Also update the profile context
+        if (updateProfile) {
+          updateProfile({ screenshot_protection: enabled });
+        }
+        toast.success(`Screenshot protection ${enabled ? 'enabled' : 'disabled'}`);
+      }).catch((error) => {
         console.error('Error updating screenshot protection:', error);
         toast.error('Failed to update screenshot protection setting');
+        // Revert the state on error
+        setScreenshotProtection(!enabled);
       });
+    } else {
+      toast.error('User not found');
+      setScreenshotProtection(!enabled);
     }
-    
-    toast.success(`Screenshot protection ${enabled ? 'enabled' : 'disabled'}`);
   };
 
   const handleSessionTimeoutChange = (minutes: number) => {
     setSessionTimeout(minutes);
     
-    // Update in database
-    if (updateProfile) {
-      updateProfile({ session_timeout_minutes: minutes }).catch((error) => {
+    // Update in database using the auth function
+    if (user) {
+      updateSessionTimeout(user.id, minutes).then(() => {
+        // Also update the profile context
+        if (updateProfile) {
+          updateProfile({ session_timeout_minutes: minutes });
+        }
+        toast.success(`Session timeout set to ${minutes} minutes. Changes will take effect on next login.`);
+      }).catch((error) => {
         console.error('Error updating session timeout:', error);
         toast.error('Failed to update session timeout setting');
+        // Revert the state on error
+        setSessionTimeout(userProfile?.session_timeout_minutes || 10);
       });
+    } else {
+      toast.error('User not found');
+      setSessionTimeout(userProfile?.session_timeout_minutes || 10);
     }
-    
-    toast.success(`Session timeout set to ${minutes} minutes`);
   };
 
   return (
@@ -100,6 +119,14 @@ const SettingsPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                These security settings help protect your account and sensitive information. 
+                Changes to session timeout will take effect on your next login.
+              </AlertDescription>
+            </Alert>
+            
             {/* Two-Factor Authentication */}
             <div className="flex items-center justify-between">
               <div className="space-y-1">
@@ -108,8 +135,8 @@ const SettingsPage = () => {
                   Add an extra layer of security to your account
                 </p>
                 {userProfile?.two_factor_enabled && (
-                  <Badge variant="secondary" className="mt-1">
-                    <Shield className="h-3 w-3 mr-1" />
+                  <Badge variant="default" className="mt-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                    <CheckCircle className="h-3 w-3 mr-1" />
                     Enabled
                   </Badge>
                 )}
@@ -130,21 +157,26 @@ const SettingsPage = () => {
                 <Label className="text-base font-medium">Session Timeout</Label>
               </div>
               <p className="text-sm text-muted-foreground">
-                Automatically log out after inactivity (requires page refresh to take effect)
+                Automatically log out after inactivity. Changes take effect on next login.
               </p>
               <div className="flex items-center gap-4">
                 <select
                   value={sessionTimeout}
                   onChange={(e) => handleSessionTimeoutChange(parseInt(e.target.value))}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                  className="flex h-10 w-48 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 >
+                  <option value={1}>1 minute (testing)</option>
                   <option value={3}>3 minutes</option>
                   <option value={5}>5 minutes</option>
                   <option value={10}>10 minutes</option>
                   <option value={15}>15 minutes</option>
                   <option value={30}>30 minutes</option>
                   <option value={60}>1 hour</option>
+                  <option value={120}>2 hours</option>
                 </select>
+                <Badge variant="outline" className="text-xs">
+                  Current: {sessionTimeout} min
+                </Badge>
               </div>
             </div>
 
@@ -158,6 +190,12 @@ const SettingsPage = () => {
                 <p className="text-sm text-muted-foreground">
                   Prevent screenshots on sensitive pages
                 </p>
+                {screenshotProtection && (
+                  <Badge variant="default" className="mt-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+                    <Eye className="h-3 w-3 mr-1" />
+                    Active
+                  </Badge>
+                )}
               </div>
               <Switch
                 checked={screenshotProtection}

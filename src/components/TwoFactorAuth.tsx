@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Shield, Mail, Smartphone, Clock } from 'lucide-react';
-import { generateAndSend2FACode, verify2FACode, enable2FA, disable2FA } from '@/lib/auth';
-import { useAuth } from '@/contexts/AuthContext';
+import { generateAndSend2FACode, verify2FACode, enable2FA } from '@/lib/auth';
+import { send2FACode } from '@/lib/emailService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TwoFactorAuthProps {
   isOpen: boolean;
@@ -49,7 +49,28 @@ const TwoFactorAuth = ({ isOpen, onClose, onSuccess, userId, mode }: TwoFactorAu
   const handleSendCode = async () => {
     setLoading(true);
     try {
-      await generateAndSend2FACode(userId, codeType);
+      const code = await generateAndSend2FACode(userId, codeType);
+      
+      // Send actual email if email type is selected
+      if (codeType === 'email') {
+        try {
+          // Get user info for email
+          const { data: user } = await supabase.auth.getUser();
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('full_name')
+            .eq('id', userId)
+            .single();
+          
+          if (user.user?.email && profile?.full_name) {
+            await send2FACode(user.user.email, profile.full_name, code);
+          }
+        } catch (emailError) {
+          console.error('Error sending 2FA email:', emailError);
+          // Don't fail the process if email fails
+        }
+      }
+      
       setStep('verify');
       setTimeLeft(600); // Reset timer
       toast.success(`Verification code sent to your ${codeType === 'email' ? 'email' : 'phone'}`);
@@ -74,12 +95,10 @@ const TwoFactorAuth = ({ isOpen, onClose, onSuccess, userId, mode }: TwoFactorAu
       if (isValid) {
         if (mode === 'setup') {
           await enable2FA(userId);
-          // Log 2FA setup
           const { logSecurityEvent } = await import('@/lib/auth');
           await logSecurityEvent(userId, '2fa_enabled', 'Two-factor authentication enabled');
           toast.success('Two-factor authentication enabled successfully!');
         } else {
-          // Log 2FA verification
           const { logSecurityEvent } = await import('@/lib/auth');
           await logSecurityEvent(userId, '2fa_verified', 'Two-factor authentication verified');
           toast.success('Code verified successfully!');
@@ -87,7 +106,6 @@ const TwoFactorAuth = ({ isOpen, onClose, onSuccess, userId, mode }: TwoFactorAu
         onSuccess();
         onClose();
       } else {
-        // Log failed 2FA attempt
         const { logSecurityEvent } = await import('@/lib/auth');
         await logSecurityEvent(userId, '2fa_failed', 'Two-factor authentication failed');
         toast.error('Invalid or expired code. Please try again.');
@@ -148,10 +166,11 @@ const TwoFactorAuth = ({ isOpen, onClose, onSuccess, userId, mode }: TwoFactorAu
                   variant={codeType === 'sms' ? 'default' : 'outline'}
                   onClick={() => setCodeType('sms')}
                   className="flex flex-col h-20 gap-2"
-                  disabled // SMS not implemented yet
+                  disabled
+                  title="SMS verification coming soon"
                 >
                   <Smartphone className="h-5 w-5" />
-                  <span className="text-xs">SMS</span>
+                  <span className="text-xs">SMS (Soon)</span>
                 </Button>
               </div>
 

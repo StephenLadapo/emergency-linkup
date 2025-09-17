@@ -1,6 +1,26 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+export interface EmergencyContact {
+  id: number;
+  name: string;
+  relation: string;
+  phone: string;
+  email?: string;
+  isPrimary?: boolean;
+}
+
+export interface MedicalInfo {
+  bloodType: string;
+  allergies: string;
+  conditions: string;
+  medications: string;
+  medicalAidNumber?: string;
+  medicalAidProvider?: string;
+  doctorName?: string;
+  doctorContact?: string;
+}
+
 export interface UserProfile {
   id: string;
   full_name: string;
@@ -9,8 +29,8 @@ export interface UserProfile {
   faculty?: string;
   year_of_study?: string;
   address?: string;
-  emergency_contacts: any[];
-  medical_info: any;
+  emergency_contacts: EmergencyContact[];
+  medical_info: MedicalInfo;
   email_verified: boolean;
   two_factor_enabled: boolean;
   screenshot_protection?: boolean;
@@ -45,7 +65,7 @@ export interface TwoFactorCode {
 }
 
 // Session timeout in minutes
-export const SESSION_TIMEOUT_MINUTES = 10;
+export const DEFAULT_SESSION_TIMEOUT_MINUTES = 10;
 
 // Maximum failed login attempts before account lock
 export const MAX_FAILED_LOGIN_ATTEMPTS = 5;
@@ -100,9 +120,13 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
 
 // Create a new session
 export const createSession = async (userId: string): Promise<UserSession> => {
+  // Get user's session timeout preference
+  const profile = await getUserProfile(userId);
+  const timeoutMinutes = profile?.session_timeout_minutes || DEFAULT_SESSION_TIMEOUT_MINUTES;
+  
   const sessionToken = crypto.randomUUID();
   const expiresAt = new Date();
-  expiresAt.setMinutes(expiresAt.getMinutes() + SESSION_TIMEOUT_MINUTES);
+  expiresAt.setMinutes(expiresAt.getMinutes() + timeoutMinutes);
 
   const sessionData = {
     user_id: userId,
@@ -364,9 +388,45 @@ export const handleFailedLogin = async (userId: string) => {
 // Handle successful login
 export const handleSuccessfulLogin = async (userId: string) => {
   try {
-    await supabase.rpc('reset_failed_login_attempts', { p_user_id: userId });
+    const { error: resetError } = await supabase.rpc('reset_failed_login_attempts', { p_user_id: userId });
+    if (resetError) {
+      console.error('Error resetting failed login attempts:', resetError);
+    }
+    
     await logSecurityEvent(userId, 'successful_login', 'User logged in successfully');
   } catch (error) {
     console.error('Error handling successful login:', error);
+  }
+};
+
+// Update user's session timeout preference
+export const updateSessionTimeout = async (userId: string, timeoutMinutes: number) => {
+  const { error } = await supabase
+    .from('user_profiles')
+    .update({ 
+      session_timeout_minutes: timeoutMinutes,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', userId);
+
+  if (error) {
+    console.error('Error updating session timeout:', error);
+    throw error;
+  }
+};
+
+// Update screenshot protection setting
+export const updateScreenshotProtection = async (userId: string, enabled: boolean) => {
+  const { error } = await supabase
+    .from('user_profiles')
+    .update({ 
+      screenshot_protection: enabled,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', userId);
+
+  if (error) {
+    console.error('Error updating screenshot protection:', error);
+    throw error;
   }
 };

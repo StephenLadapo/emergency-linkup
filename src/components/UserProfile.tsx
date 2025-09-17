@@ -10,26 +10,7 @@ import { toast } from "sonner";
 import { PlusCircle, X, Phone, Mail, MapPin, UserPlus, Shield, User } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from '@/contexts/AuthContext';
-
-type EmergencyContact = {
-  id: number;
-  name: string;
-  relation: string;
-  phone: string;
-  email?: string;
-  isPrimary?: boolean;
-};
-
-type MedicalInfo = {
-  bloodType: string;
-  allergies: string;
-  conditions: string;
-  medications: string;
-  medicalAidNumber?: string;
-  medicalAidProvider?: string;
-  doctorName?: string;
-  doctorContact?: string;
-};
+import { EmergencyContact, MedicalInfo } from '@/lib/auth';
 
 type UserData = {
   name: string;
@@ -122,15 +103,28 @@ const UserProfile = () => {
         address: user.address,
         faculty: user.faculty,
         year_of_study: user.yearOfStudy,
-        emergency_contacts: user.emergencyContacts,
-        medical_info: user.medicalInfo
+        emergency_contacts: user.emergencyContacts || [],
+        medical_info: user.medicalInfo || {
+          bloodType: '',
+          allergies: '',
+          conditions: '',
+          medications: '',
+          medicalAidNumber: '',
+          medicalAidProvider: '',
+          doctorName: '',
+          doctorContact: ''
+        }
       }).then(() => {
         // Add to history
         addToHistory('profile', 'Profile information updated');
-        toast.success('Profile updated successfully!');
+        toast.success('Profile updated successfully!', {
+          duration: 4000
+        });
       }).catch((error) => {
         console.error('Error updating profile:', error);
-        toast.error('Failed to update profile. Please try again.');
+        toast.error('Failed to update profile. Please try again.', {
+          duration: 5000
+        });
       });
       
       // Also update localStorage for backward compatibility
@@ -142,14 +136,27 @@ const UserProfile = () => {
     if (user && updateProfile) {
       // Update Supabase profile
       updateProfile({
-        medical_info: user.medicalInfo
+        medical_info: user.medicalInfo || {
+          bloodType: '',
+          allergies: '',
+          conditions: '',
+          medications: '',
+          medicalAidNumber: '',
+          medicalAidProvider: '',
+          doctorName: '',
+          doctorContact: ''
+        }
       }).then(() => {
         // Add to history
         addToHistory('profile', 'Medical information updated');
-        toast.success('Medical information updated successfully!');
+        toast.success('Medical information updated successfully!', {
+          duration: 4000
+        });
       }).catch((error) => {
         console.error('Error updating medical info:', error);
-        toast.error('Failed to update medical information. Please try again.');
+        toast.error('Failed to update medical information. Please try again.', {
+          duration: 5000
+        });
       });
       
       // Also update localStorage for backward compatibility
@@ -197,7 +204,9 @@ const UserProfile = () => {
     
     setShowAddContact(false);
     
-    toast.success('Emergency contact added successfully!');
+    toast.success('Emergency contact added successfully!', {
+      duration: 4000
+    });
   };
   
   const handleRemoveContact = (id: number) => {
@@ -221,7 +230,9 @@ const UserProfile = () => {
       addToHistory('contact', `Emergency contact ${contactToRemove.name} removed`);
     }
     
-    toast.success('Contact removed successfully!');
+    toast.success('Contact removed successfully!', {
+      duration: 3000
+    });
   };
   
   const handleSetPrimaryContact = (id: number) => {
@@ -249,7 +260,9 @@ const UserProfile = () => {
       addToHistory('contact', `Set ${primaryContact.name} as primary emergency contact`);
     }
     
-    toast.success('Primary contact updated!');
+    toast.success('Primary contact updated!', {
+      duration: 3000
+    });
   };
   
   // Function to add events to user history

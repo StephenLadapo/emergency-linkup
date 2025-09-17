@@ -1,8 +1,9 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { createSession, getUserProfile, createUserProfile, UserProfile } from '@/lib/auth';
+import { createSession, getUserProfile, createUserProfile, UserProfile, logSecurityEvent } from '@/lib/auth';
 import { useSessionTimeout } from '@/hooks/useSessionTimeout';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
@@ -36,6 +37,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const { invalidateSession } = await import('@/lib/auth');
         await invalidateSession(sessionToken);
+        
+        if (user) {
+          await logSecurityEvent(user.id, 'user_logout', 'User logged out');
+        }
       } catch (error) {
         console.error('Error invalidating session:', error);
       }
@@ -77,7 +82,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 email_verified: session.user.email_confirmed_at ? true : false,
                 two_factor_enabled: false,
                 screenshot_protection: true,
-                session_timeout_minutes: 10
+                session_timeout_minutes: 10,
+                emergency_contacts: [],
+                medical_info: {
+                  bloodType: '',
+                  allergies: '',
+                  conditions: '',
+                  medications: '',
+                  medicalAidNumber: '',
+                  medicalAidProvider: '',
+                  doctorName: '',
+                  doctorContact: ''
+                }
               });
             }
             setUserProfile(profile);
@@ -121,6 +137,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     setUserProfile(data);
+    
+    // Log profile update
+    try {
+      await logSecurityEvent(user.id, 'profile_updated', 'User profile updated');
+    } catch (logError) {
+      console.error('Error logging profile update:', logError);
+    }
+    
     return data;
   };
 

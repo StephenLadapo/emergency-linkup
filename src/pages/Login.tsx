@@ -25,8 +25,19 @@ const Login = () => {
 
       if (error) {
         // Handle failed login if we have a user ID
-        if (data?.user?.id) {
-          await handleFailedLogin(data.user.id);
+        // Try to find user by email for failed login tracking
+        try {
+          const { data: profileData } = await supabase
+            .from('user_profiles')
+            .select('id')
+            .eq('id', (await supabase.auth.getUser()).data.user?.id || '')
+            .single();
+          
+          if (profileData?.id) {
+            await handleFailedLogin(profileData.id);
+          }
+        } catch (profileError) {
+          console.error('Error tracking failed login:', profileError);
         }
         throw error;
       }
@@ -36,7 +47,8 @@ const Login = () => {
         const locked = await isAccountLocked(data.user.id);
         if (locked) {
           await supabase.auth.signOut();
-          throw new Error('Account is temporarily locked due to multiple failed login attempts. Please try again later.');
+          await logSecurityEvent(data.user.id, 'login_blocked', 'Login attempt on locked account');
+          throw new Error('Account is temporarily locked due to multiple failed login attempts. Please try again in 15 minutes.');
         }
 
         // Handle successful login
@@ -63,11 +75,17 @@ const Login = () => {
       if (error.message?.includes('Account is temporarily locked')) {
         toast.error(error.message);
       } else if (error.message?.includes('Email not confirmed')) {
-        toast.error('Please verify your email address before logging in. Check your inbox for the verification link.');
+        toast.error('Please verify your email address before logging in. Check your inbox for the verification link.', {
+          duration: 8000
+        });
       } else if (error.message?.includes('Invalid login credentials')) {
-        toast.error('Invalid email or password. Please check your credentials and try again.');
+        toast.error('Invalid email or password. Please check your credentials and try again.', {
+          duration: 6000
+        });
       } else {
-        toast.error(error.message || 'Login failed. Please check your credentials.');
+        toast.error(error.message || 'Login failed. Please check your credentials.', {
+          duration: 6000
+        });
       }
     } finally {
       setLoading(false);
@@ -80,7 +98,9 @@ const Login = () => {
     if (pendingUserId) {
       logSecurityEvent(pendingUserId, '2fa_success', 'Two-factor authentication completed');
     }
-    toast.success('Login successful!');
+    toast.success('Login successful! Welcome to the Emergency System.', {
+      duration: 5000
+    });
     navigate('/dashboard/profile');
   };
 
@@ -92,6 +112,9 @@ const Login = () => {
     setPendingUserId(null);
     // Sign out the user since 2FA was not completed
     supabase.auth.signOut();
+    toast.info('Login cancelled. Two-factor authentication is required.', {
+      duration: 5000
+    });
   };
 
   return (

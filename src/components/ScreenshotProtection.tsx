@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { updateScreenshotProtection } from '@/lib/auth';
 
 interface ScreenshotProtectionProps {
   enabled?: boolean;
@@ -14,6 +15,13 @@ const ScreenshotProtection = ({
   const { userProfile } = useAuth();
   const isProtectionEnabled = userProfile?.screenshot_protection ?? enabled;
   
+  // Update protection setting in database when it changes
+  useEffect(() => {
+    if (userProfile && userProfile.screenshot_protection !== isProtectionEnabled) {
+      updateScreenshotProtection(userProfile.id, isProtectionEnabled).catch(console.error);
+    }
+  }, [isProtectionEnabled, userProfile]);
+  
   useEffect(() => {
     if (!isProtectionEnabled) return;
 
@@ -26,7 +34,10 @@ const ScreenshotProtection = ({
     // Disable right-click context menu
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
-      toast.warning('Right-click is disabled on this page for security reasons');
+      toast.warning('Right-click is disabled on this page for security reasons', {
+        duration: 3000,
+        position: 'top-center'
+      });
     };
 
     // Disable common screenshot shortcuts
@@ -34,42 +45,60 @@ const ScreenshotProtection = ({
       // Print Screen
       if (e.key === 'PrintScreen') {
         e.preventDefault();
-        toast.warning('Screenshots are disabled for security reasons');
+        toast.warning('Screenshots are disabled for security reasons', {
+          duration: 3000,
+          position: 'top-center'
+        });
         return;
       }
 
       // Ctrl/Cmd + Shift + S (Firefox screenshot)
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'S') {
         e.preventDefault();
-        toast.warning('Screenshots are disabled for security reasons');
+        toast.warning('Screenshots are disabled for security reasons', {
+          duration: 3000,
+          position: 'top-center'
+        });
         return;
       }
 
       // Ctrl/Cmd + Shift + 3/4/5 (macOS screenshots)
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && ['3', '4', '5'].includes(e.key)) {
         e.preventDefault();
-        toast.warning('Screenshots are disabled for security reasons');
+        toast.warning('Screenshots are disabled for security reasons', {
+          duration: 3000,
+          position: 'top-center'
+        });
         return;
       }
 
       // F12 (Developer tools)
       if (e.key === 'F12') {
         e.preventDefault();
-        toast.warning('Developer tools are disabled for security reasons');
+        toast.warning('Developer tools are disabled for security reasons', {
+          duration: 3000,
+          position: 'top-center'
+        });
         return;
       }
 
       // Ctrl/Cmd + Shift + I (Developer tools)
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'I') {
         e.preventDefault();
-        toast.warning('Developer tools are disabled for security reasons');
+        toast.warning('Developer tools are disabled for security reasons', {
+          duration: 3000,
+          position: 'top-center'
+        });
         return;
       }
 
       // Ctrl/Cmd + U (View source)
       if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
         e.preventDefault();
-        toast.warning('View source is disabled for security reasons');
+        toast.warning('View source is disabled for security reasons', {
+          duration: 3000,
+          position: 'top-center'
+        });
         return;
       }
     };
@@ -90,8 +119,12 @@ const ScreenshotProtection = ({
     // Add blur effect when window loses focus (potential screenshot attempt)
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        document.body.style.filter = 'blur(10px)';
+        document.body.style.filter = 'blur(5px)';
         document.body.style.transition = 'filter 0.3s ease';
+        toast.warning('Screen blurred for security', {
+          duration: 2000,
+          position: 'top-center'
+        });
       } else {
         document.body.style.filter = 'none';
       }
@@ -103,7 +136,10 @@ const ScreenshotProtection = ({
       if (navigator.userAgent.includes('Lightshot') || 
           navigator.userAgent.includes('Snagit') ||
           navigator.userAgent.includes('Greenshot')) {
-        toast.warning('Screenshot tools detected. Screenshots are disabled for security.');
+        toast.warning('Screenshot tools detected. Screenshots are disabled for security.', {
+          duration: 5000,
+          position: 'top-center'
+        });
       }
     };
 

@@ -110,7 +110,18 @@ const Register = () => {
             two_factor_enabled: false,
             screenshot_protection: true,
             session_timeout_minutes: 10,
-            failed_login_attempts: 0
+            failed_login_attempts: 0,
+            emergency_contacts: [],
+            medical_info: {
+              bloodType: '',
+              allergies: '',
+              conditions: '',
+              medications: '',
+              medicalAidNumber: '',
+              medicalAidProvider: '',
+              doctorName: '',
+              doctorContact: ''
+            }
           });
           
           // Log registration event
@@ -120,7 +131,9 @@ const Register = () => {
           // Don't fail registration if profile creation fails
         }
         
-        toast.success('Registration successful! Please check your email to verify your account.');
+        toast.success('Registration successful! Please check your email to verify your account.', {
+          duration: 8000
+        });
         
         // Send confirmation email via EmailJS
         try {
@@ -134,7 +147,21 @@ const Register = () => {
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      toast.error(error.message || 'Registration failed. Please try again.');
+      
+      // Handle specific registration errors
+      if (error.message?.includes('User already registered')) {
+        toast.error('An account with this email already exists. Please try logging in instead.', {
+          duration: 6000
+        });
+      } else if (error.message?.includes('Password should be at least')) {
+        toast.error('Password is too weak. Please choose a stronger password.', {
+          duration: 6000
+        });
+      } else {
+        toast.error(error.message || 'Registration failed. Please try again.', {
+          duration: 6000
+        });
+      }
     } finally {
       setLoading(false);
     }
