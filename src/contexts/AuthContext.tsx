@@ -1,17 +1,12 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { createSession, getUserProfile, createUserProfile, UserProfile, logSecurityEvent } from '@/lib/auth';
-import { useSessionTimeout } from '@/hooks/useSessionTimeout';
-import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  userProfile: UserProfile | null;
   loading: boolean;
   signOut: () => Promise<void>;
-  updateProfile: (profileData: Partial<UserProfile>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,37 +22,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const signOut = async () => {
-    // Invalidate session in database
-    const sessionToken = localStorage.getItem('session_token');
-    if (sessionToken) {
-      try {
-        const { invalidateSession } = await import('@/lib/auth');
-        await invalidateSession(sessionToken);
-        
-        if (user) {
-          await logSecurityEvent(user.id, 'user_logout', 'User logged out');
-        }
-      } catch (error) {
-        console.error('Error invalidating session:', error);
-      }
-    }
-    
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error signing out:', error);
-      throw error;
-    }
-  };
-
-  // Get session timeout from user profile or default to 10 minutes
-  const sessionTimeout = userProfile?.session_timeout_minutes || 10;
-
-  // Initialize session timeout - only call after signOut is defined
-  useSessionTimeout(sessionTimeout, user, signOut);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -67,41 +32,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
-          // Create session in database
-          try {
-            await createSession(session.user.id);
-            
-            // Load or create user profile
-            let profile = await getUserProfile(session.user.id);
-            if (!profile) {
-              // Create profile if it doesn't exist
-              profile = await createUserProfile(session.user.id, {
-                full_name: session.user.user_metadata?.full_name || '',
-                student_id: session.user.user_metadata?.student_id || '',
-                email_verified: session.user.email_confirmed_at ? true : false,
-                two_factor_enabled: false,
-                screenshot_protection: true,
-                session_timeout_minutes: 10,
-                emergency_contacts: [],
-                medical_info: {
-                  bloodType: '',
-                  allergies: '',
-                  conditions: '',
-                  medications: '',
-                  medicalAidNumber: '',
-                  medicalAidProvider: '',
-                  doctorName: '',
-                  doctorContact: ''
-                }
-              });
-            }
-            setUserProfile(profile);
-          } catch (error) {
-            console.error('Error setting up user session/profile:', error);
-          }
-        } else {
-          setUserProfile(null);
+        // Handle email confirmation
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log('User signed in:', session.user.email);
         }
         
         setLoading(false);
@@ -110,6 +43,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -118,43 +52,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const updateProfile = async (profileData: Partial<UserProfile>) => {
-    if (!user) throw new Error('No user logged in');
-    
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .update({
-        ...profileData,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', user.id)
-      .select()
-      .single();
-
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
     if (error) {
-      console.error('Error updating profile:', error);
+      console.error('Error signing out:', error);
       throw error;
     }
-
-    setUserProfile(data);
-    
-    // Log profile update
-    try {
-      await logSecurityEvent(user.id, 'profile_updated', 'User profile updated');
-    } catch (logError) {
-      console.error('Error logging profile update:', logError);
-    }
-    
-    return data;
   };
 
   const value = {
     user,
     session,
-    userProfile,
     loading,
     signOut,
-    updateProfile,
   };
 
   return (

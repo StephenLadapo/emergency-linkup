@@ -1,163 +1,253 @@
-
-import { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Shield, Stethoscope, BadgeAlert } from "lucide-react";
-import { toast } from "sonner";
-
-const COUNTDOWN_TIME = 5; // seconds
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
+import { AlertTriangle, MapPin, Mic, MicOff } from 'lucide-react';
+import { toast } from 'sonner';
+import { useEmergencyRequest } from '@/hooks/useEmergencyRequest';
 
 const EmergencyButton = () => {
-  const [open, setOpen] = useState(false);
-  const [emergencyType, setEmergencyType] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState(COUNTDOWN_TIME);
-  const [isSending, setIsSending] = useState(false);
-  const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [emergencyType, setEmergencyType] = useState<'medical' | 'security' | 'fire' | 'both'>('medical');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [location, setLocation] = useState('');
+  const [priority, setPriority] = useState(3);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  
+  const { createEmergencyRequest, loading } = useEmergencyRequest();
 
-  useEffect(() => {
-    // Get current location when component mounts
-    if (navigator.geolocation) {
+  const handleGetLocation = () => {
+    setIsGettingLocation(true);
+    
+    if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
+          const { latitude, longitude } = position.coords;
+          setLocation(`Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`);
+          toast.success('Location captured successfully');
+          setIsGettingLocation(false);
         },
         (error) => {
-          console.error("Error getting location:", error);
-          toast.error("Couldn't access your location. Please enable location services.");
+          console.error('Geolocation error:', error);
+          toast.error('Failed to get location. Please enter manually.');
+          setIsGettingLocation(false);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
         }
       );
+    } else {
+      toast.error('Geolocation is not supported by this browser');
+      setIsGettingLocation(false);
     }
-  }, []);
+  };
 
-  useEffect(() => {
-    let timer: number;
-    if (isSending && countdown > 0) {
-      timer = window.setTimeout(() => {
-        setCountdown(countdown - 1);
-      }, 1000);
-    } else if (isSending && countdown === 0) {
-      sendEmergencyRequest();
+  const handleVoiceRecording = () => {
+    if (isRecording) {
+      // Stop recording logic would go here
+      setIsRecording(false);
+      toast.success('Voice recording stopped');
+    } else {
+      // Start recording logic would go here
+      setIsRecording(true);
+      toast.success('Voice recording started');
+      
+      // Simulate stopping after 10 seconds
+      setTimeout(() => {
+        setIsRecording(false);
+        toast.success('Voice recording completed');
+      }, 10000);
     }
-    return () => clearTimeout(timer);
-  }, [isSending, countdown]);
+  };
 
-  const startCountdown = () => {
-    if (!emergencyType) {
-      toast.error("Please select an emergency type");
+  const handleSubmitEmergency = async () => {
+    if (!title.trim()) {
+      toast.error('Please provide a title for the emergency');
       return;
     }
-    setIsSending(true);
-  };
 
-  const cancelRequest = () => {
-    setIsSending(false);
-    setCountdown(COUNTDOWN_TIME);
-    toast.info("Emergency request canceled");
-  };
+    const locationData = location.includes('Lat:') && location.includes('Lng:') 
+      ? {
+          location_lat: parseFloat(location.split('Lat: ')[1].split(',')[0]),
+          location_lng: parseFloat(location.split('Lng: ')[1]),
+          location_address: location
+        }
+      : {
+          location_address: location || 'Location not provided'
+        };
 
-  const sendEmergencyRequest = async () => {
-    try {
-      // In a real app, this would send the request to your backend
-      console.log("Sending emergency request:", {
-        type: emergencyType,
-        location,
-        timestamp: new Date().toISOString()
-      });
+    const requestData = {
+      emergency_type: emergencyType,
+      title: title.trim(),
+      description: description.trim() || undefined,
+      ...locationData,
+      priority_level: priority,
+    };
+
+    const result = await createEmergencyRequest(requestData);
+    
+    if (result) {
+      // Reset form
+      setTitle('');
+      setDescription('');
+      setLocation('');
+      setPriority(3);
+      setEmergencyType('medical');
+      setIsOpen(false);
       
-      toast.success("Emergency request sent! Help is on the way.");
-      setOpen(false);
-      setIsSending(false);
-      setCountdown(COUNTDOWN_TIME);
-      setEmergencyType(null);
-    } catch (error) {
-      console.error("Error sending emergency request:", error);
-      toast.error("Failed to send emergency request. Please try again.");
-      setIsSending(false);
-      setCountdown(COUNTDOWN_TIME);
+      toast.success('Emergency request submitted! Help is on the way.');
     }
   };
 
   return (
-    <div className="fixed bottom-24 right-4 z-10">
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button 
-            variant="destructive" 
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <div className="fixed bottom-6 right-6 z-50">
+          <Button
             size="lg"
-            className="rounded-full h-20 w-20 text-xl font-bold animate-pulse-slow shadow-lg shadow-primary/20"
+            className="h-16 w-16 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-lg animate-pulse"
           >
-            SOS
+            <AlertTriangle className="h-8 w-8" />
           </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-md rounded-xl">
-          <DialogHeader>
-            <DialogTitle className="text-center text-xl font-bold text-destructive">
-              Emergency Assistance
-            </DialogTitle>
-          </DialogHeader>
+        </div>
+      </DialogTrigger>
+      
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-red-600">
+            <AlertTriangle className="h-5 w-5" />
+            Emergency Request
+          </DialogTitle>
+          <DialogDescription>
+            Fill out the details below to request emergency assistance. Help will be dispatched immediately.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="emergencyType">Emergency Type</Label>
+            <Select value={emergencyType} onValueChange={(value: any) => setEmergencyType(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select emergency type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="medical">Medical Emergency</SelectItem>
+                <SelectItem value="security">Security Emergency</SelectItem>
+                <SelectItem value="fire">Fire Emergency</SelectItem>
+                <SelectItem value="both">Medical & Security</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           
-          {!isSending ? (
-            <div className="space-y-6">
-              <div className="text-center text-sm text-muted-foreground">
-                Select the type of emergency you're experiencing:
-              </div>
-              
-              <RadioGroup value={emergencyType || ""} onValueChange={setEmergencyType} className="grid grid-cols-1 gap-4">
-                <div className="flex items-center space-x-2 border rounded-md p-4 hover:bg-muted/50 transition-colors">
-                  <RadioGroupItem value="security" id="security" />
-                  <Label htmlFor="security" className="flex items-center cursor-pointer">
-                    <Shield className="h-5 w-5 mr-3 text-destructive" /> 
-                    Security Emergency
-                  </Label>
-                </div>
-                
-                <div className="flex items-center space-x-2 border rounded-md p-4 hover:bg-muted/50 transition-colors">
-                  <RadioGroupItem value="medical" id="medical" />
-                  <Label htmlFor="medical" className="flex items-center cursor-pointer">
-                    <Stethoscope className="h-5 w-5 mr-3 text-secondary" /> 
-                    Medical Emergency
-                  </Label>
-                </div>
-                
-                <div className="flex items-center space-x-2 border rounded-md p-4 hover:bg-muted/50 transition-colors">
-                  <RadioGroupItem value="other" id="other" />
-                  <Label htmlFor="other" className="flex items-center cursor-pointer">
-                    <BadgeAlert className="h-5 w-5 mr-3 text-amber-500" /> 
-                    Other Emergency
-                  </Label>
-                </div>
-              </RadioGroup>
-              
-              <Button 
-                variant="destructive" 
-                className="w-full py-6 text-lg font-bold" 
-                onClick={startCountdown}
+          <div className="space-y-2">
+            <Label htmlFor="title">Emergency Title</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Brief description of the emergency"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="description">Detailed Description (Optional)</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Provide more details about the situation..."
+              rows={3}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="location">Location</Label>
+            <div className="flex gap-2">
+              <Input
+                id="location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Enter location or use GPS"
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleGetLocation}
+                disabled={isGettingLocation}
+                className="shrink-0"
               >
-                Request Help Now
+                <MapPin className="h-4 w-4" />
+                {isGettingLocation ? 'Getting...' : 'GPS'}
               </Button>
             </div>
-          ) : (
-            <div className="space-y-6 text-center p-4">
-              <div className="text-5xl font-bold text-destructive mb-2">{countdown}</div>
-              <div className="text-lg">
-                Help will be requested in {countdown} seconds
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="priority">Priority Level (1-5)</Label>
+            <Select value={priority.toString()} onValueChange={(value) => setPriority(parseInt(value))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">1 - Low Priority</SelectItem>
+                <SelectItem value="2">2 - Below Normal</SelectItem>
+                <SelectItem value="3">3 - Normal</SelectItem>
+                <SelectItem value="4">4 - High Priority</SelectItem>
+                <SelectItem value="5">5 - Critical Emergency</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <Card className="bg-orange-50 border-orange-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Voice Message</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Record a voice message for additional context
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant={isRecording ? "destructive" : "outline"}
+                  onClick={handleVoiceRecording}
+                  className="shrink-0"
+                >
+                  {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  {isRecording ? 'Stop' : 'Record'}
+                </Button>
               </div>
-              <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-                Your current location will be shared with emergency responders
-              </div>
-              <Button variant="outline" onClick={cancelRequest} className="w-full">
-                Cancel Request
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="flex gap-2 pt-4">
+          <Button 
+            variant="outline" 
+            onClick={() => setIsOpen(false)}
+            className="flex-1"
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmitEmergency}
+            disabled={loading}
+            className="flex-1 bg-red-600 hover:bg-red-700"
+          >
+            {loading ? 'Submitting...' : 'Submit Emergency Request'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

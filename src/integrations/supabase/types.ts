@@ -14,16 +14,181 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      emergency_requests: {
+        Row: {
+          assigned_to: string | null
+          audio_transcription: string | null
+          audio_url: string | null
+          created_at: string
+          description: string | null
+          emergency_type: Database["public"]["Enums"]["emergency_type"]
+          id: string
+          location_address: string | null
+          location_lat: number | null
+          location_lng: number | null
+          priority_level: number | null
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["emergency_status"]
+          student_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          audio_transcription?: string | null
+          audio_url?: string | null
+          created_at?: string
+          description?: string | null
+          emergency_type: Database["public"]["Enums"]["emergency_type"]
+          id?: string
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          priority_level?: number | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["emergency_status"]
+          student_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          audio_transcription?: string | null
+          audio_url?: string | null
+          created_at?: string
+          description?: string | null
+          emergency_type?: Database["public"]["Enums"]["emergency_type"]
+          id?: string
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          priority_level?: number | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["emergency_status"]
+          student_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_requests_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emergency_responses: {
+        Row: {
+          created_at: string
+          emergency_id: string
+          id: string
+          message: string
+          responder_id: string
+          response_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          emergency_id: string
+          id?: string
+          message: string
+          responder_id: string
+          response_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          emergency_id?: string
+          id?: string
+          message?: string
+          responder_id?: string
+          response_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_responses_emergency_id_fkey"
+            columns: ["emergency_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_responses_responder_id_fkey"
+            columns: ["responder_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          phone: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          student_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          student_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          student_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_access_emergency_type: {
+        Args: {
+          user_uuid: string
+          req_type: Database["public"]["Enums"]["emergency_type"]
+        }
+        Returns: boolean
+      }
+      get_user_role: {
+        Args: { user_uuid: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          user_uuid: string
+          required_role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "student" | "medical_staff" | "security_staff" | "admin"
+      emergency_status: "pending" | "in_progress" | "resolved" | "cancelled"
+      emergency_type: "medical" | "security" | "fire" | "both"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +315,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["student", "medical_staff", "security_staff", "admin"],
+      emergency_status: ["pending", "in_progress", "resolved", "cancelled"],
+      emergency_type: ["medical", "security", "fire", "both"],
+    },
   },
 } as const
