@@ -1,11 +1,14 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { User } from '@supabase/supabase-js';
 import { updateSessionActivity, isSessionValid, invalidateSession } from '@/lib/auth';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
-export const useSessionTimeout = (timeoutMinutes: number = 10) => {
-  const { user, signOut } = useAuth();
+export const useSessionTimeout = (
+  timeoutMinutes: number = 10,
+  user: User | null,
+  signOut: () => Promise<void>
+) => {
   const navigate = useNavigate();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const warningRef = useRef<NodeJS.Timeout | null>(null);

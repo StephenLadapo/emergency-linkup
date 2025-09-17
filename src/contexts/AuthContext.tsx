@@ -29,8 +29,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize session timeout
-  useSessionTimeout(10); // 10 minutes timeout
+  const signOut = async () => {
+    // Invalidate session in database
+    const sessionToken = localStorage.getItem('session_token');
+    if (sessionToken) {
+      try {
+        const { invalidateSession } = await import('@/lib/auth');
+        await invalidateSession(sessionToken);
+      } catch (error) {
+        console.error('Error invalidating session:', error);
+      }
+    }
+    
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error);
+      throw error;
+    }
+  };
+
+  // Initialize session timeout with user and signOut
+  useSessionTimeout(10, user, signOut); // 10 minutes timeout
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -76,25 +95,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const signOut = async () => {
-    // Invalidate session in database
-    const sessionToken = localStorage.getItem('session_token');
-    if (sessionToken) {
-      try {
-        const { invalidateSession } = await import('@/lib/auth');
-        await invalidateSession(sessionToken);
-      } catch (error) {
-        console.error('Error invalidating session:', error);
-      }
-    }
-    
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error signing out:', error);
-      throw error;
-    }
-  };
 
   const updateProfile = async (profileData: Partial<UserProfile>) => {
     if (!user) throw new Error('No user logged in');
