@@ -13,7 +13,9 @@ const EmailVerificationBanner = () => {
 
   useEffect(() => {
     // Show banner if user is logged in but email is not verified
-    if (user && !user.email_confirmed_at && userProfile && !userProfile.email_verified) {
+    const emailVerificationDismissed = localStorage.getItem('email_verification_dismissed');
+    
+    if (user && !user.email_confirmed_at && userProfile && !userProfile.email_verified && !emailVerificationDismissed) {
       setIsVisible(true);
     } else {
       setIsVisible(false);
@@ -36,6 +38,10 @@ const EmailVerificationBanner = () => {
       if (error) throw error;
 
       toast.success('Verification email sent! Please check your inbox.');
+      
+      // Log security event
+      const { logSecurityEvent } = await import('@/lib/auth');
+      await logSecurityEvent(user.id, 'verification_email_resent', 'Email verification resent');
     } catch (error: any) {
       console.error('Error resending verification:', error);
       toast.error(error.message || 'Failed to resend verification email');

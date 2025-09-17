@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ScreenshotProtectionProps {
   enabled?: boolean;
@@ -10,9 +11,11 @@ const ScreenshotProtection = ({
   enabled = true, 
   sensitivePages = ['/dashboard', '/emergency-flow', '/profile'] 
 }: ScreenshotProtectionProps) => {
+  const { userProfile } = useAuth();
+  const isProtectionEnabled = userProfile?.screenshot_protection ?? enabled;
   
   useEffect(() => {
-    if (!enabled) return;
+    if (!isProtectionEnabled) return;
 
     // Check if current page is sensitive
     const currentPath = window.location.pathname;
@@ -162,7 +165,7 @@ const ScreenshotProtection = ({
         style.parentNode.removeChild(style);
       }
     };
-  }, [enabled, sensitivePages]);
+  }, [isProtectionEnabled, sensitivePages]);
 
   return null; // This component doesn't render anything
 };

@@ -74,13 +74,22 @@ const TwoFactorAuth = ({ isOpen, onClose, onSuccess, userId, mode }: TwoFactorAu
       if (isValid) {
         if (mode === 'setup') {
           await enable2FA(userId);
+          // Log 2FA setup
+          const { logSecurityEvent } = await import('@/lib/auth');
+          await logSecurityEvent(userId, '2fa_enabled', 'Two-factor authentication enabled');
           toast.success('Two-factor authentication enabled successfully!');
         } else {
+          // Log 2FA verification
+          const { logSecurityEvent } = await import('@/lib/auth');
+          await logSecurityEvent(userId, '2fa_verified', 'Two-factor authentication verified');
           toast.success('Code verified successfully!');
         }
         onSuccess();
         onClose();
       } else {
+        // Log failed 2FA attempt
+        const { logSecurityEvent } = await import('@/lib/auth');
+        await logSecurityEvent(userId, '2fa_failed', 'Two-factor authentication failed');
         toast.error('Invalid or expired code. Please try again.');
       }
     } catch (error) {

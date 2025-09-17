@@ -31,12 +31,13 @@ export const send2FACode = async (email: string, fullName: string, code: string)
       to_name: fullName,
       to_email: email,
       verification_code: code,
+      expiry_time: '10 minutes',
       app_name: 'EmergencyLinkUp - University of Limpopo'
     };
 
     await emailjs.send(
       "service_fprjlcl",
-      "template_2fa",
+      "template_gu18aiq", // Using existing template
       templateParams
     );
 

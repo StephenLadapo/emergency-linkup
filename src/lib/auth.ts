@@ -13,6 +13,11 @@ export interface UserProfile {
   medical_info: any;
   email_verified: boolean;
   two_factor_enabled: boolean;
+  screenshot_protection?: boolean;
+  session_timeout_minutes?: number;
+  last_login_at?: string;
+  failed_login_attempts?: number;
+  account_locked_until?: string;
   created_at: string;
   updated_at: string;
 }
@@ -41,6 +46,12 @@ export interface TwoFactorCode {
 
 // Session timeout in minutes
 export const SESSION_TIMEOUT_MINUTES = 10;
+
+// Maximum failed login attempts before account lock
+export const MAX_FAILED_LOGIN_ATTEMPTS = 5;
+
+// Account lock duration in minutes
+export const ACCOUNT_LOCK_DURATION_MINUTES = 15;
 
 // Generate a random 6-digit code for 2FA
 export const generateTwoFactorCode = (): string => {
@@ -267,12 +278,95 @@ const getClientIP = async (): Promise<string> => {
 // Clean up expired sessions and codes
 export const cleanupExpiredData = async () => {
   try {
-    // Clean up expired sessions
-    await supabase.rpc('cleanup_expired_sessions');
+    // Clean up expired sessions and 2FA codes
+    const { error: sessionsError } = await supabase.rpc('cleanup_expired_sessions');
+    if (sessionsError) {
+      console.error('Error cleaning up sessions:', sessionsError);
+    }
     
-    // Clean up expired 2FA codes
-    await supabase.rpc('cleanup_expired_2fa_codes');
+    const { error: codesError } = await supabase.rpc('cleanup_expired_2fa_codes');
+    if (codesError) {
+      console.error('Error cleaning up 2FA codes:', codesError);
+    }
   } catch (error) {
     console.error('Error cleaning up expired data:', error);
+  }
+};
+
+// Log security events
+export const logSecurityEvent = async (
+  userId: string,
+  eventType: string,
+  eventDescription?: string,
+  metadata?: any
+) => {
+  try {
+    const { error } = await supabase.rpc('log_security_event', {
+      p_user_id: userId,
+      p_event_type: eventType,
+      p_event_description: eventDescription,
+      p_ip_address: await getClientIP(),
+      p_user_agent: navigator.userAgent,
+      p_metadata: metadata || {}
+    });
+    
+    if (error) {
+      console.error('Error logging security event:', error);
+    }
+  } catch (error) {
+    console.error('Error logging security event:', error);
+  }
+};
+
+// Check if account is locked
+export const isAccountLocked = async (userId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('account_locked_until, failed_login_attempts')
+      .eq('id', userId)
+      .single();
+
+    if (error || !data) {
+      return false;
+    }
+
+    if (data.account_locked_until) {
+      const lockUntil = new Date(data.account_locked_until);
+      const now = new Date();
+      
+      if (lockUntil > now) {
+        return true;
+      } else {
+        // Lock has expired, reset failed attempts
+        await supabase.rpc('reset_failed_login_attempts', { p_user_id: userId });
+        return false;
+      }
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Error checking account lock status:', error);
+    return false;
+  }
+};
+
+// Handle failed login attempt
+export const handleFailedLogin = async (userId: string) => {
+  try {
+    await supabase.rpc('handle_failed_login', { p_user_id: userId });
+    await logSecurityEvent(userId, 'failed_login', 'Failed login attempt');
+  } catch (error) {
+    console.error('Error handling failed login:', error);
+  }
+};
+
+// Handle successful login
+export const handleSuccessfulLogin = async (userId: string) => {
+  try {
+    await supabase.rpc('reset_failed_login_attempts', { p_user_id: userId });
+    await logSecurityEvent(userId, 'successful_login', 'User logged in successfully');
+  } catch (error) {
+    console.error('Error handling successful login:', error);
   }
 };

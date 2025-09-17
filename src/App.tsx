@@ -31,7 +31,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <ScreenshotProtection enabled={true} />
+      <ScreenshotProtection />
       <Toaster />
       <Sonner />
       <BrowserRouter>

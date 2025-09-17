@@ -14,23 +14,17 @@ import { disable2FA } from "@/lib/auth";
 const SettingsPage = () => {
   const { user, userProfile, updateProfile } = useAuth();
   const [show2FASetup, setShow2FASetup] = useState(false);
-  const [screenshotProtection, setScreenshotProtection] = useState(true);
-  const [sessionTimeout, setSessionTimeout] = useState(10); // minutes
+  const [screenshotProtection, setScreenshotProtection] = useState(userProfile?.screenshot_protection ?? true);
+  const [sessionTimeout, setSessionTimeout] = useState(userProfile?.session_timeout_minutes ?? 10);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Load settings from localStorage
-    const savedScreenshotProtection = localStorage.getItem('screenshotProtection');
-    const savedSessionTimeout = localStorage.getItem('sessionTimeout');
-    
-    if (savedScreenshotProtection !== null) {
-      setScreenshotProtection(JSON.parse(savedScreenshotProtection));
+    // Update state when userProfile changes
+    if (userProfile) {
+      setScreenshotProtection(userProfile.screenshot_protection ?? true);
+      setSessionTimeout(userProfile.session_timeout_minutes ?? 10);
     }
-    
-    if (savedSessionTimeout) {
-      setSessionTimeout(parseInt(savedSessionTimeout));
-    }
-  }, []);
+  }, [userProfile]);
 
   const handleToggle2FA = async () => {
     if (!user || !userProfile) return;
@@ -63,13 +57,29 @@ const SettingsPage = () => {
 
   const handleScreenshotProtectionChange = (enabled: boolean) => {
     setScreenshotProtection(enabled);
-    localStorage.setItem('screenshotProtection', JSON.stringify(enabled));
+    
+    // Update in database
+    if (updateProfile) {
+      updateProfile({ screenshot_protection: enabled }).catch((error) => {
+        console.error('Error updating screenshot protection:', error);
+        toast.error('Failed to update screenshot protection setting');
+      });
+    }
+    
     toast.success(`Screenshot protection ${enabled ? 'enabled' : 'disabled'}`);
   };
 
   const handleSessionTimeoutChange = (minutes: number) => {
     setSessionTimeout(minutes);
-    localStorage.setItem('sessionTimeout', minutes.toString());
+    
+    // Update in database
+    if (updateProfile) {
+      updateProfile({ session_timeout_minutes: minutes }).catch((error) => {
+        console.error('Error updating session timeout:', error);
+        toast.error('Failed to update session timeout setting');
+      });
+    }
+    
     toast.success(`Session timeout set to ${minutes} minutes`);
   };
 
@@ -120,7 +130,7 @@ const SettingsPage = () => {
               <Label className="text-base font-medium">Session Timeout</Label>
             </div>
             <p className="text-sm text-muted-foreground">
-              Automatically log out after inactivity
+              Automatically log out after inactivity (requires page refresh to take effect)
             </p>
             <div className="flex items-center gap-4">
               <select
@@ -128,6 +138,7 @@ const SettingsPage = () => {
                 onChange={(e) => handleSessionTimeoutChange(parseInt(e.target.value))}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
               >
+                <option value={3}>3 minutes</option>
                 <option value={5}>5 minutes</option>
                 <option value={10}>10 minutes</option>
                 <option value={15}>15 minutes</option>

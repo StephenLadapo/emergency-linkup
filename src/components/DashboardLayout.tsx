@@ -84,7 +84,7 @@ const DashboardLayout = () => {
 
   return (
     <>
-      <ScreenshotProtection enabled={true} />
+      <ScreenshotProtection />
     <SidebarProvider defaultOpen={true}>
       <div className="flex w-full min-h-screen">
         <DashboardSidebar />

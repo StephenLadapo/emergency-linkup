@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import Logo from '@/components/Logo';
 import { supabase } from '@/integrations/supabase/client';
 import TwoFactorAuth from '@/components/TwoFactorAuth';
-import { getUserProfile } from '@/lib/auth';
+import { getUserProfile, isAccountLocked, handleFailedLogin, handleSuccessfulLogin, logSecurityEvent } from '@/lib/auth';
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -19,24 +19,48 @@ const Login = () => {
     setLoading(true);
     
     try {
+      // First, get the user ID to check if account is locked
+      const { data: userData, error: userError } = await supabase
+        .from('user_profiles')
+        .select('id, account_locked_until, failed_login_attempts')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id || '')
+        .single();
+
+      // Check if account is locked (we'll do this after getting user from auth)
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        // Handle failed login if we have a user ID
+        if (data?.user?.id) {
+          await handleFailedLogin(data.user.id);
+        }
         throw error;
       }
 
       if (data.user) {
+        // Check if account is locked
+        const locked = await isAccountLocked(data.user.id);
+        if (locked) {
+          await supabase.auth.signOut();
+          throw new Error('Account is temporarily locked due to multiple failed login attempts. Please try again later.');
+        }
+
+        // Handle successful login
+        await handleSuccessfulLogin(data.user.id);
+        
         // Check if user has 2FA enabled
         const profile = await getUserProfile(data.user.id);
         
         if (profile?.two_factor_enabled) {
           setPendingUserId(data.user.id);
           setShow2FA(true);
+          await logSecurityEvent(data.user.id, '2fa_required', 'Two-factor authentication required');
           toast.info('Please complete two-factor authentication');
         } else {
+          await logSecurityEvent(data.user.id, 'login_success', 'User logged in successfully');
           toast.success('Login successful!');
           navigate('/dashboard/profile');
         }
@@ -45,7 +69,9 @@ const Login = () => {
       console.error('Login error:', error);
       
       // Handle specific error cases
-      if (error.message?.includes('Email not confirmed')) {
+      if (error.message?.includes('Account is temporarily locked')) {
+        toast.error(error.message);
+      } else if (error.message?.includes('Email not confirmed')) {
         toast.error('Please verify your email address before logging in. Check your inbox for the verification link.');
       } else if (error.message?.includes('Invalid login credentials')) {
         toast.error('Invalid email or password. Please check your credentials and try again.');
@@ -60,12 +86,18 @@ const Login = () => {
   const handle2FASuccess = () => {
     setShow2FA(false);
     setPendingUserId(null);
+    if (pendingUserId) {
+      logSecurityEvent(pendingUserId, '2fa_success', 'Two-factor authentication completed');
+    }
         toast.success('Login successful!');
         navigate('/dashboard/profile');
   };
 
   const handle2FAClose = () => {
     setShow2FA(false);
+    if (pendingUserId) {
+      logSecurityEvent(pendingUserId, '2fa_cancelled', 'Two-factor authentication cancelled');
+    }
     setPendingUserId(null);
     // Sign out the user since 2FA was not completed
     supabase.auth.signOut();

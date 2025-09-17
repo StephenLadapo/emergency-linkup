@@ -48,8 +48,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Initialize session timeout with user and signOut
-  useSessionTimeout(10, user, signOut); // 10 minutes timeout
+  // Get session timeout from user profile or default to 10 minutes
+  const sessionTimeout = userProfile?.session_timeout_minutes || 10;
+
+  // Initialize session timeout - only call after signOut is defined
+  useSessionTimeout(sessionTimeout, user, signOut);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -71,7 +74,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               profile = await createUserProfile(session.user.id, {
                 full_name: session.user.user_metadata?.full_name || '',
                 student_id: session.user.user_metadata?.student_id || '',
-                email_verified: session.user.email_confirmed_at ? true : false
+                email_verified: session.user.email_confirmed_at ? true : false,
+                two_factor_enabled: false,
+                screenshot_protection: true,
+                session_timeout_minutes: 10
               });
             }
             setUserProfile(profile);
