@@ -10,6 +10,7 @@ import { Button } from "./ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "./ui/use-toast";
 import ScreenshotProtection from "./ScreenshotProtection";
+import ScreenshotProtection from "./ScreenshotProtection";
 
 const DashboardLayout = () => {
   const [unusualSoundDetected, setUnusualSoundDetected] = useState(false);
@@ -85,6 +86,8 @@ const DashboardLayout = () => {
   return (
     <>
       <ScreenshotProtection />
+    <>
+      <ScreenshotProtection />
     <SidebarProvider defaultOpen={true}>
       <div className="flex w-full min-h-screen">
         <DashboardSidebar />
@@ -136,6 +139,7 @@ const DashboardLayout = () => {
         </SidebarInset>
       </div>
     </SidebarProvider>
+    </>
     </>
   );
 };
