@@ -1,10 +1,13 @@
 
 import UserProfile from "@/components/UserProfile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EmailVerificationBanner from "@/components/EmailVerificationBanner";
 
 const ProfilePage = () => {
   return (
     <div className="space-y-6">
+      <EmailVerificationBanner />
+      
       <h2 className="text-2xl font-semibold">User Profile</h2>
       <p className="text-muted-foreground">
         Manage your personal information, emergency contacts, and medical history.

@@ -24,12 +24,14 @@ import HistoryPage from "./pages/dashboard/HistoryPage";
 import SettingsPage from "./pages/dashboard/SettingsPage";
 import EmergencyVoiceDemo from "./pages/EmergencyVoiceDemo";
 import EmotionDetectorDemo from "./pages/EmotionDetectorDemo";
+import ScreenshotProtection from "./components/ScreenshotProtection";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <ScreenshotProtection enabled={true} />
       <Toaster />
       <Sonner />
       <BrowserRouter>

@@ -6,9 +6,13 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Logo from '@/components/Logo';
 import { supabase } from '@/integrations/supabase/client';
+import TwoFactorAuth from '@/components/TwoFactorAuth';
+import { getUserProfile } from '@/lib/auth';
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
+  const [show2FA, setShow2FA] = useState(false);
+  const [pendingUserId, setPendingUserId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleLogin = async (email: string, password: string) => {
@@ -25,18 +29,50 @@ const Login = () => {
       }
 
       if (data.user) {
-        toast.success('Login successful!');
-        navigate('/dashboard/profile');
+        // Check if user has 2FA enabled
+        const profile = await getUserProfile(data.user.id);
+        
+        if (profile?.two_factor_enabled) {
+          setPendingUserId(data.user.id);
+          setShow2FA(true);
+          toast.info('Please complete two-factor authentication');
+        } else {
+          toast.success('Login successful!');
+          navigate('/dashboard/profile');
+        }
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.message || 'Login failed. Please check your credentials.');
+      
+      // Handle specific error cases
+      if (error.message?.includes('Email not confirmed')) {
+        toast.error('Please verify your email address before logging in. Check your inbox for the verification link.');
+      } else if (error.message?.includes('Invalid login credentials')) {
+        toast.error('Invalid email or password. Please check your credentials and try again.');
+      } else {
+        toast.error(error.message || 'Login failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  const handle2FASuccess = () => {
+    setShow2FA(false);
+    setPendingUserId(null);
+        toast.success('Login successful!');
+        navigate('/dashboard/profile');
+  };
+
+  const handle2FAClose = () => {
+    setShow2FA(false);
+    setPendingUserId(null);
+    // Sign out the user since 2FA was not completed
+    supabase.auth.signOut();
+  };
+
   return (
+    <>
     <div className="min-h-screen w-full flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-900/70 to-amber-700/70 mix-blend-multiply"></div>
@@ -80,6 +116,18 @@ const Login = () => {
         </div>
       </div>
     </div>
+      
+      {/* Two-Factor Authentication Modal */}
+      {show2FA && pendingUserId && (
+        <TwoFactorAuth
+          isOpen={show2FA}
+          onClose={handle2FAClose}
+          onSuccess={handle2FASuccess}
+          userId={pendingUserId}
+          mode="verify"
+        />
+      )}
+    </>
   );
 };
 

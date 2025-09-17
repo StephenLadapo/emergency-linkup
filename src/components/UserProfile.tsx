@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { PlusCircle, X, Phone, Mail, MapPin, UserPlus, Shield, User } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from '@/contexts/AuthContext';
 
 type EmergencyContact = {
   id: number;
@@ -43,6 +44,7 @@ type UserData = {
 };
 
 const UserProfile = () => {
+  const { user: authUser, userProfile, updateProfile } = useAuth();
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [newContact, setNewContact] = useState<EmergencyContact>({
@@ -56,14 +58,17 @@ const UserProfile = () => {
   const [showAddContact, setShowAddContact] = useState(false);
   
   useEffect(() => {
-    // In a real app, this would fetch from a backend API
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      
-      // Initialize medical info if not present
-      if (!userData.medicalInfo) {
-        userData.medicalInfo = {
+    // Load user data from Supabase profile or localStorage fallback
+    if (userProfile) {
+      const userData = {
+        name: userProfile.full_name,
+        email: authUser?.email || '',
+        studentNumber: userProfile.student_id || '',
+        phoneNumber: userProfile.phone_number || '',
+        address: userProfile.address || '',
+        faculty: userProfile.faculty || '',
+        yearOfStudy: userProfile.year_of_study || '',
+        medicalInfo: userProfile.medical_info || {
           bloodType: '',
           allergies: '',
           conditions: '',
@@ -72,40 +77,83 @@ const UserProfile = () => {
           medicalAidProvider: '',
           doctorName: '',
           doctorContact: ''
-        };
-      }
-      
-      // Initialize emergency contacts if not present
-      if (!userData.emergencyContacts) {
-        userData.emergencyContacts = [];
-      }
-      
+        },
+        emergencyContacts: userProfile.emergency_contacts || []
+      };
       setUser(userData);
+    } else {
+      // Fallback to localStorage for backward compatibility
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+      
+        // Initialize medical info if not present
+        if (!userData.medicalInfo) {
+          userData.medicalInfo = {
+            bloodType: '',
+            allergies: '',
+            conditions: '',
+            medications: '',
+            medicalAidNumber: '',
+            medicalAidProvider: '',
+            doctorName: '',
+            doctorContact: ''
+          };
+        }
+      
+        // Initialize emergency contacts if not present
+        if (!userData.emergencyContacts) {
+          userData.emergencyContacts = [];
+        }
+      
+        setUser(userData);
+      }
     }
     setLoading(false);
-  }, []);
+  }, [userProfile, authUser]);
   
   const handleUpdateProfile = () => {
-    // In a real app, this would send to a backend API
-    if (user) {
+    if (user && updateProfile) {
+      // Update Supabase profile
+      updateProfile({
+        full_name: user.name,
+        student_id: user.studentNumber,
+        phone_number: user.phoneNumber,
+        address: user.address,
+        faculty: user.faculty,
+        year_of_study: user.yearOfStudy,
+        emergency_contacts: user.emergencyContacts,
+        medical_info: user.medicalInfo
+      }).then(() => {
+        // Add to history
+        addToHistory('profile', 'Profile information updated');
+        toast.success('Profile updated successfully!');
+      }).catch((error) => {
+        console.error('Error updating profile:', error);
+        toast.error('Failed to update profile. Please try again.');
+      });
+      
+      // Also update localStorage for backward compatibility
       localStorage.setItem('user', JSON.stringify(user));
-      
-      // Add to history
-      addToHistory('profile', 'Profile information updated');
-      
-      toast.success('Profile updated successfully!');
     }
   };
   
   const handleUpdateMedical = () => {
-    // In a real app, this would send to a backend API
-    if (user) {
+    if (user && updateProfile) {
+      // Update Supabase profile
+      updateProfile({
+        medical_info: user.medicalInfo
+      }).then(() => {
+        // Add to history
+        addToHistory('profile', 'Medical information updated');
+        toast.success('Medical information updated successfully!');
+      }).catch((error) => {
+        console.error('Error updating medical info:', error);
+        toast.error('Failed to update medical information. Please try again.');
+      });
+      
+      // Also update localStorage for backward compatibility
       localStorage.setItem('user', JSON.stringify(user));
-      
-      // Add to history
-      addToHistory('profile', 'Medical information updated');
-      
-      toast.success('Medical information updated successfully!');
     }
   };
   
